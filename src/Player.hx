@@ -14,14 +14,12 @@ class Player extends GameSprite
 {
 	private var quad : Quad;
 	private var dir : DIRECTION;
-	private var jumpHeld : Bool;
 
 	public function new(c : UInt = 0xff0000)
 	{
 		super();
 
 		dir = NONE;
-		jumpHeld = false;
 		quad = new Quad(50,50,c);
 		addChild(quad);
 		addEventListener(Event.ADDED_TO_STAGE, addHandler);
@@ -43,7 +41,7 @@ class Player extends GameSprite
 			case Keyboard.RIGHT:
 				dir = RIGHT;
 			case Keyboard.UP:
-				jumpHeld = true;
+				jump();
 		}
 	}
 
@@ -56,7 +54,7 @@ class Player extends GameSprite
 			case Keyboard.RIGHT:
 				if(dir == RIGHT) dir = NONE;
 			case Keyboard.UP:
-				jumpHeld = false;
+				endJump();
 			case Keyboard.R:
 				x = y = 0;
 				vel.x = vel.y = 0;
@@ -74,6 +72,12 @@ class Player extends GameSprite
 		}
 	}
 
+	private function endJump()
+	{
+		if(!onPlatform && vel.y < 0)
+			vel.y = 10 * weight;
+	}
+
 	override private function move()
 	{
 		vel.x = switch(dir)
@@ -82,9 +86,7 @@ class Player extends GameSprite
 			case RIGHT: speed;
 			default: 0;
 		}
-		if(jumpHeld && onPlatform) jump();
-		else if(!jumpHeld && !onPlatform && vel.y < 0)
-			vel.y = 10 * weight;
+		lastPos.x = x; lastPos.y = y;
 		x += vel.x; y += vel.y;
 	}
 

@@ -36,12 +36,11 @@ class Level extends Sprite
 	{
 		for(player in players)
 		{
-			player.resetPlatformCollision();
+			player.gravity();
 			for(platform in platforms)
 			{	player.platformCollision(platform);}
 			for(wall in walls)
 			{	player.wallCollision(wall);}
-			player.gravity();
 		}
 	}
 }
