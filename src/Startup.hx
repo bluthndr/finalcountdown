@@ -5,6 +5,7 @@ import flash.geom.Rectangle;
 import flash.Lib;
 import starling.core.Starling;
 import starling.animation.Transitions;
+import bitmasq.*;
 
 @:bitmap("assets/loading.png")
 class LoadingBitmapData extends flash.display.BitmapData { }
@@ -12,6 +13,7 @@ class LoadingBitmapData extends flash.display.BitmapData { }
 class Startup extends Sprite
 {
 	private var loadingBitmap:Bitmap;
+	private static var deviceNum : UInt = 0;
 
 	function new()
 	{
@@ -51,8 +53,17 @@ class Startup extends Sprite
 	static function main()
 	{
 		var stage = Lib.current.stage;
+		Gamepad.init(stage);
+		//Gamepad.traceFunction = haxe.Log.trace;
+		Gamepad.get().addEventListener(GamepadEvent.DEVICE_ADDED,
+		function(){++deviceNum;});
+		Gamepad.get().addEventListener(GamepadEvent.DEVICE_REMOVED,
+		function(){--deviceNum;});
 		stage.addChild(new Startup());
 	}
+
+	public static function getDeviceNum() : UInt
+	{	return deviceNum;}
 
 	public function init(fn : Void->Void)
 	{

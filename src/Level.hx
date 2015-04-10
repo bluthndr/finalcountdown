@@ -1,5 +1,6 @@
 import starling.display.Sprite;
 import starling.events.*;
+import flash.ui.*;
 
 class Level extends Sprite
 {
@@ -16,6 +17,7 @@ class Level extends Sprite
 		walls = wall;
 
 		addEventListener(Event.ADDED_TO_STAGE, addHandler);
+		addEventListener(KeyboardEvent.KEY_UP, debugFunc);
 	}
 
 	private function addHandler(e:Event)
@@ -41,6 +43,23 @@ class Level extends Sprite
 			{	player.platformCollision(platform);}
 			for(wall in walls)
 			{	player.wallCollision(wall);}
+		}
+	}
+
+	private function debugFunc(e:KeyboardEvent)
+	{
+		switch(e.keyCode)
+		{
+			case Keyboard.F1:
+				haxe.Log.clear();
+				for(player in players)
+				{
+					trace("Position: " + player.getPosition(),
+					"Velocity: " + player.getVelocity());
+				}
+			case Keyboard.F2:
+				for(player in players)
+					player.reset();
 		}
 	}
 }

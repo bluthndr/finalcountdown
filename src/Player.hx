@@ -2,6 +2,7 @@ import starling.events.*;
 import flash.ui.*;
 import starling.display.Quad;
 import flash.geom.Rectangle;
+import bitmasq.*;
 
 enum DIRECTION
 {
@@ -10,16 +11,38 @@ enum DIRECTION
 	NONE;
 }
 
+typedef Controller = {left : Float, right : Float, up : Float, down : Float, jump : Float, gamepadControl : Bool}
 class Player extends GameSprite
 {
 	private var quad : Quad;
 	private var dir : DIRECTION;
+	private var controller : Controller;
 
-	public function new(c : UInt = 0xff0000)
+	public function new(c : UInt = 0xff0000, gpCtrl : Bool = false)
 	{
 		super();
 
 		dir = NONE;
+		if(gpCtrl)
+		{
+			controller =
+			{left : Gamepad.D_LEFT,
+			right : Gamepad.D_RIGHT,
+			down : Gamepad.D_DOWN,
+			up : Gamepad.D_UP,
+			jump : Gamepad.A_DOWN,
+			gamepadControl : true};
+		}
+		else
+		{
+			controller =
+			{left : Keyboard.LEFT,
+			right : Keyboard.RIGHT,
+			down : Keyboard.DOWN,
+			up : Keyboard.UP,
+			jump : Keyboard.SPACE,
+			gamepadControl : false};
+		}
 		quad = new Quad(50,50,c);
 		addChild(quad);
 		addEventListener(Event.ADDED_TO_STAGE, addHandler);
@@ -28,39 +51,65 @@ class Player extends GameSprite
 	private function addHandler(e:Event)
 	{
 		removeEventListener(Event.ADDED_TO_STAGE, addHandler);
-		addEventListener(KeyboardEvent.KEY_DOWN, inputDown);
-		addEventListener(KeyboardEvent.KEY_UP, inputUp);
-	}
 
-	private function inputDown(e:KeyboardEvent)
-	{
-		switch(e.keyCode)
+		if(controller.gamepadControl)
 		{
-			case Keyboard.LEFT:
-				dir = LEFT;
-			case Keyboard.RIGHT:
-				dir = RIGHT;
-			case Keyboard.UP:
-				jump();
+			Gamepad.get().addEventListener(GamepadEvent.CHANGE, gamepadInput);
+			addEventListener(Event.REMOVED_FROM_STAGE,
+			function(e:Event)
+			{
+				Gamepad.get().removeEventListener(GamepadEvent.CHANGE, gamepadInput);
+			});
+		}
+		else
+		{
+			addEventListener(KeyboardEvent.KEY_UP, keyboardInputUp);
+			addEventListener(KeyboardEvent.KEY_DOWN, keyboardInputDown);
 		}
 	}
 
-	private function inputUp(e:KeyboardEvent)
+	private function gamepadInput(e:GamepadEvent)
 	{
-		switch(e.keyCode)
+		/*haxe.Log.clear();
+		trace("Gamepad Event Triggered!");*/
+		if(e.control == controller.left)
 		{
-			case Keyboard.LEFT:
-				if(dir == LEFT) dir = NONE;
-			case Keyboard.RIGHT:
-				if(dir == RIGHT) dir = NONE;
-			case Keyboard.UP:
-				endJump();
-			case Keyboard.R:
-				x = y = 0;
-				vel.x = vel.y = 0;
-			case Keyboard.F1:
-				trace(x,y);
+			switch(e.value)
+			{
+				case 1: dir = LEFT;
+				case 0: if(dir == LEFT) dir = NONE;
+			}
 		}
+		else if(e.control == controller.right)
+		{
+			switch(e.value)
+			{
+				case 1: dir = RIGHT;
+				case 0: if(dir == RIGHT) dir = NONE;
+			}
+		}
+		else if(e.control == controller.jump)
+		{
+			switch(e.value)
+			{
+				case 1: jump();
+				case 0: endJump();
+			}
+		}
+	}
+
+	private function keyboardInputDown(e:KeyboardEvent)
+	{
+		if(e.keyCode == controller.left) dir = LEFT;
+		else if(e.keyCode == controller.right)dir = RIGHT;
+		else if(e.keyCode == controller.jump) jump();
+	}
+
+	private function keyboardInputUp(e:KeyboardEvent)
+	{
+		if(e.keyCode == controller.left){if(dir == LEFT) dir = NONE;}
+		else if(e.keyCode == controller.right){if(dir == RIGHT) dir = NONE;}
+		else if(e.keyCode == controller.jump) endJump();
 	}
 
 	private function jump()
@@ -89,6 +138,9 @@ class Player extends GameSprite
 		lastPos.x = x; lastPos.y = y;
 		x += vel.x; y += vel.y;
 	}
+
+	public function reset()
+	{	x = y = vel.x = vel.y = 0;}
 
 	override public function getRect() : Rectangle
 	{	return new Rectangle(x,y, quad.width, quad.height);}

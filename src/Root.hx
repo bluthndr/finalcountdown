@@ -1,5 +1,6 @@
 import starling.display.Sprite;
 import starling.utils.AssetManager;
+import bitmasq.*;
 
 class Root extends Sprite
 {
@@ -65,7 +66,7 @@ class Root extends Sprite
 		wall6.x = plat2.x;
 		walls.push(wall6);
 
-		var ply = new Player();
+		var ply = new Player(0xff0000,Startup.getDeviceNum() > 0);
 		ply.x = Startup.stageWidth(0.5) - ply.width/2;
 
 		addChild(new Level([ply], plats, walls));
