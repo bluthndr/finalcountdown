@@ -1,5 +1,4 @@
 import starling.events.*;
-import flash.ui.*;
 import starling.display.Quad;
 import flash.geom.Rectangle;
 import bitmasq.*;
@@ -11,38 +10,18 @@ enum DIRECTION
 	NONE;
 }
 
-typedef Controller = {left : Float, right : Float, up : Float, down : Float, jump : Float, gamepadControl : Bool}
 class Player extends GameSprite
 {
 	private var quad : Quad;
 	private var dir : DIRECTION;
 	private var controller : Controller;
 
-	public function new(c : UInt = 0xff0000, gpCtrl : Bool = false)
+	public function new(ctrl : Controller, c : UInt = 0xff0000)
 	{
 		super();
 
 		dir = NONE;
-		if(gpCtrl)
-		{
-			controller =
-			{left : Gamepad.D_LEFT,
-			right : Gamepad.D_RIGHT,
-			down : Gamepad.D_DOWN,
-			up : Gamepad.D_UP,
-			jump : Gamepad.A_DOWN,
-			gamepadControl : true};
-		}
-		else
-		{
-			controller =
-			{left : Keyboard.LEFT,
-			right : Keyboard.RIGHT,
-			down : Keyboard.DOWN,
-			up : Keyboard.UP,
-			jump : Keyboard.SPACE,
-			gamepadControl : false};
-		}
+		controller = ctrl;
 		quad = new Quad(50,50,c);
 		addChild(quad);
 		addEventListener(Event.ADDED_TO_STAGE, addHandler);

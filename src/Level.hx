@@ -60,6 +60,8 @@ class Level extends Sprite
 			case Keyboard.F2:
 				for(player in players)
 					player.reset();
+			case Keyboard.ESCAPE:
+				cast(parent, Menu).reset();
 		}
 	}
 }
