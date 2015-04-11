@@ -15,7 +15,7 @@ class Root extends Sprite
 		{
 			if (ratio == 1)
 			{
-				startup.init(function(){addChild(new Menu());});
+				startup.init(function(){addChild(new Game());});
 			}
 		});
 	}

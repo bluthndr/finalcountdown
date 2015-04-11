@@ -16,13 +16,13 @@ class Player extends GameSprite
 	private var dir : DIRECTION;
 	private var controller : Controller;
 
-	public function new(ctrl : Controller, c : UInt = 0xff0000)
+	public function new(p : PlayerPanel)
 	{
 		super();
 
 		dir = NONE;
-		controller = ctrl;
-		quad = new Quad(50,50,c);
+		controller = p.getCtrls();
+		quad = new Quad(50,50,p.getColor());
 		addChild(quad);
 		addEventListener(Event.ADDED_TO_STAGE, addHandler);
 	}
@@ -31,7 +31,7 @@ class Player extends GameSprite
 	{
 		removeEventListener(Event.ADDED_TO_STAGE, addHandler);
 
-		if(controller.gamepadControl)
+		if(controller.gamepad)
 		{
 			Gamepad.get().addEventListener(GamepadEvent.CHANGE, gamepadInput);
 			addEventListener(Event.REMOVED_FROM_STAGE,
@@ -51,28 +51,31 @@ class Player extends GameSprite
 	{
 		/*haxe.Log.clear();
 		trace("Gamepad Event Triggered!");*/
-		if(e.control == controller.left)
+		if(e.deviceIndex == controller.padID)
 		{
-			switch(e.value)
+			if(e.control == controller.left)
 			{
-				case 1: dir = LEFT;
-				case 0: if(dir == LEFT) dir = NONE;
+				switch(e.value)
+				{
+					case 1: dir = LEFT;
+					case 0: if(dir == LEFT) dir = NONE;
+				}
 			}
-		}
-		else if(e.control == controller.right)
-		{
-			switch(e.value)
+			else if(e.control == controller.right)
 			{
-				case 1: dir = RIGHT;
-				case 0: if(dir == RIGHT) dir = NONE;
+				switch(e.value)
+				{
+					case 1: dir = RIGHT;
+					case 0: if(dir == RIGHT) dir = NONE;
+				}
 			}
-		}
-		else if(e.control == controller.jump)
-		{
-			switch(e.value)
+			else if(e.control == controller.jump)
 			{
-				case 1: jump();
-				case 0: endJump();
+				switch(e.value)
+				{
+					case 1: jump();
+					case 0: endJump();
+				}
 			}
 		}
 	}

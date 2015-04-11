@@ -61,7 +61,7 @@ class Level extends Sprite
 				for(player in players)
 					player.reset();
 			case Keyboard.ESCAPE:
-				cast(parent, Menu).reset();
+				cast(parent, Game).reset();
 		}
 	}
 }
