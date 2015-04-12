@@ -1,18 +1,20 @@
 import starling.display.*;
-import starling.text.TextField;
 import starling.events.*;
 import flash.ui.*;
+import flash.geom.Point;
 
 class Level extends Sprite
 {
 	private var sprites : Array<GameSprite>;
 	private var level : LevelGeom;
+	private var spawnPoints : Array<Point>;
 
-	public function new(w : Float, h : Float, sp : Array<GameSprite>,
+	public function new(w : Float, h : Float, pos : Array<Point>, sp : Array<GameSprite>,
 	plats : Array<Platform>, walls : Array<Wall>, ?lava : Array<Lava>)
 	{
 		super();
 
+		spawnPoints = pos;
 		sprites = sp;
 		level = new LevelGeom(w,h,plats,walls,lava);
 
@@ -27,7 +29,12 @@ class Level extends Sprite
 
 		//add all children to level
 		addChild(level);
-		for(ply in sprites) addChild(ply);
+		for(i in 0...sprites.length)
+		{
+			sprites[i].x = spawnPoints[i].x;
+			sprites[i].y = spawnPoints[i].y;
+			addChild(sprites[i]);
+		}
 		for(ply in sprites) cast(ply, Player).addMeter(this);
 		//for(i in 0...numChildren) trace(getChildAt(i));
 	}
@@ -61,10 +68,10 @@ class Level extends Sprite
 				haxe.Log.clear();
 				trace(this);
 			case Keyboard.F2:
-				for(player in sprites)
+				for(i in 0...sprites.length)
 				{
 					try
-					{cast(player,Player).reset();}
+					{cast(sprites[i],Player).reset(spawnPoints[i]);}
 					catch(d:Dynamic){continue;}
 				}
 			case Keyboard.F3:
@@ -80,8 +87,19 @@ class Level extends Sprite
 					catch(d:Dynamic){continue;}
 				}
 			case Keyboard.ESCAPE:
+				haxe.Log.clear();
 				cast(parent, Game).reset();
 		}
+	}
+
+	public function getSpawnPoint(p : Player) : Point
+	{
+		for(i in 0...sprites.length)
+		{
+			if(sprites[i] == p)
+				return spawnPoints[i];
+		}
+		throw "Player isn't in the level...";
 	}
 
 	public function addLimbs(limbs : Array<PlayerLimb>)

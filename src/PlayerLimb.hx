@@ -7,7 +7,7 @@ class PlayerLimb extends GameSprite
 	private var image : Image;
 	private var lifetime : Int;
 
-	private inline static var speedMod = 5;
+	private inline static var speedMod = 7.5;
 	public function new(lt : String, angle : Float)
 	{
 		super();
@@ -16,15 +16,17 @@ class PlayerLimb extends GameSprite
 		if(image == null) throw "Wrong texture!";
 		addChild(image);
 
-		weight = 5;
+		vel.x = Math.cos(angle) * speedMod;
+		vel.y = -Math.sin(angle) * speedMod;
+		weight = 0.3;
 		lifetime = 300;
 
 		addEventListener(Event.ADDED, function(e:Event)
 		{
 			removeEventListeners(Event.ADDED);
 			image.alignPivot();
-			charWidth = image.width;
-			charHeight = image.height;
+			charWidth = image.width/4;
+			charHeight = image.height/4;
 			curRect = new Rectangle(x,y,image.width,image.height);
 			lastRect = curRect.clone();
 			//trace(curRect, lastRect);
@@ -43,7 +45,11 @@ class PlayerLimb extends GameSprite
 	override public function platformCollision(plat : Platform) : Bool
 	{
 		if(vel.y > 0 && lastPos.y <= plat.y - charHeight
-		&& this.getRect().intersects(plat.getRect())){vel.y = -10;}
+		&& this.getRect().intersects(plat.getRect()))
+		{
+			y = plat.y - charHeight;
+			vel.y *= -0.5;
+		}
 		return onPlatform();
 	}
 
@@ -51,10 +57,26 @@ class PlayerLimb extends GameSprite
 	{
 		if(this.getRect().intersects(wall.getRect()))
 		{
-			if((vel.y > 0 && lastPos.y <= wall.y - charHeight) ||
-			(vel.y < 0 && lastPos.y >= wall.y + wall.height)){vel.y = -10;}
-			else if((vel.x >= 0 && lastPos.x <= wall.x - charWidth) ||
-			(vel.x <= 0 && lastPos.x >= wall.x + wall.width)){vel.x = -10;}
+			if(vel.y > 0 && lastPos.y <= wall.y - charHeight)
+			{
+				y = wall.y - charHeight;
+				vel.y *= -0.5;
+			}
+			else if(vel.x >= 0 && lastPos.x <= wall.x - charWidth)
+			{
+				vel.x *= -1;
+				x = wall.x - charWidth;
+			}
+			else if(vel.x <= 0 && lastPos.x >= wall.x + wall.width)
+			{
+				vel.x *= -1;
+				x = wall.x + wall.width;
+			}
+			else if(vel.y < 0 && lastPos.y >= wall.y + wall.height)
+			{
+				vel.y *= -1;
+				y = wall.y + wall.height;
+			}
 		}
 	}
 
@@ -67,9 +89,8 @@ class PlayerLimb extends GameSprite
 	override private function move()
 	{
 		if(--lifetime <= 0) despawn();
-		image.rotation += PlayerImage.deg2rad(magnitude()*0.5);
+		image.rotation += PlayerImage.deg2rad(magnitude()*0.005);
 		vel.x *= 0.95;
-		if(vel.y > 30) vel.y = 30;
 		super.move();
 	}
 

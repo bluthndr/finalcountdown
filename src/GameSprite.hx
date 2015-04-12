@@ -1,7 +1,6 @@
 import starling.display.Sprite;
 import flash.geom.Point;
 import flash.geom.Rectangle;
-import starling.events.Event;
 
 class GameSprite extends Sprite implements Collidable
 {
@@ -14,11 +13,10 @@ class GameSprite extends Sprite implements Collidable
 	private var charHeight : Float;
 	private var curRect : Rectangle;
 	private var lastRect : Rectangle;
-	private var spawnPos : Point;
 
 	//speed is the magnitude of the velocity vector squared
 	private static inline var LOW_BOUNCE_BOUND = 1024;//32 squared
-	private static inline var HIGH_BOUNCE_BOUND = 1600;//40 sqaured
+	private static inline var HIGH_BOUNCE_BOUND = 5041;//71 sqaured
 	/*If sprite hits a wall when:
 
 	LOW_BOUNCE_BOUND <= magnitude <= GameSprite.HIGH_BOUNCE_BOUND,
@@ -35,12 +33,6 @@ class GameSprite extends Sprite implements Collidable
 		weight = 0.15;
 		speed = 10;
 		platOn = null;
-
-		addEventListener(Event.ADDED, function(e:Event)
-		{
-			removeEventListeners(Event.ADDED);
-			spawnPos = new Point(x,y);
-		});
 	}
 
 	public function getPosition() : Point

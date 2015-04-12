@@ -1,9 +1,8 @@
-import starling.textures.Texture;
 import starling.display.*;
-import starling.text.TextField;
 import starling.events.*;
 import flash.ui.*;
 import bitmasq.*;
+import flash.geom.Point;
 
 class Game extends Sprite
 {
@@ -77,7 +76,7 @@ class Game extends Sprite
 		removeChildren();
 		addInputListeners();
 		for(panel in panels) addChild(panel);
-		var t = new TextField(title.length*50,100,title);
+		var t = new GameText(title.length*50,100,title);
 		t.x = Startup.stageWidth(0.5) - t.width/2;
 		t.fontSize = 50;
 		addChild(t);
@@ -166,7 +165,8 @@ class Game extends Sprite
 		walls.push(wall6);
 
 		addChild(new Level(Startup.stageWidth(), Startup.stageHeight(),
-								loadPlayers(), plats, walls, lavas));
+		[new Point(0,10), new Point(160,10), new Point(Startup.stageWidth()-160,10),
+		new Point(Startup.stageWidth()-48,10)],loadPlayers(), plats, walls, lavas));
 	}
 
 	private function loadPlayers() : Array<GameSprite>
@@ -178,8 +178,6 @@ class Game extends Sprite
 			if(panel.isHuman())
 			{
 				var player = new Player(panel,i);
-				player.x = Startup.stageWidth(i*0.25);
-				player.y = 10;
 				players.push(player);
 			}
 			++i;

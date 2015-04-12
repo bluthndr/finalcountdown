@@ -1,21 +1,24 @@
 import starling.display.*;
-import starling.text.TextField;
 import starling.utils.*;
 
 class PlayerMeter extends Sprite
 {
 	private var damage : Float;
-	private var output : TextField;
+	private var output : GameText;
+
+	private inline static var MAX_DAMAGE = 200;
 
 	public function new(p : Player, i : UInt)
 	{
 		super();
 		damage = 0;
 
-		addChild(new Quad(100,50, p.getColor()));
+		addChild(new Quad(100,50,p.getColor()));
+		var q = new Quad(80,30, 0);
+		q.x = q.y = 10;
+		addChild(q);
 
-		output = new TextField(100, 50, Std.string(damage)+"%");
-		output.fontSize = 20;
+		output = new GameText(100, 50, Std.string(damage)+"%");
 		output.vAlign = VAlign.CENTER;
 		output.hAlign = HAlign.CENTER;
 		addChild(output);
@@ -26,10 +29,11 @@ class PlayerMeter extends Sprite
 
 	public function takeDamage(d : Float)
 	{
-		if(damage < 300)
+		if(damage < MAX_DAMAGE)
 		{
 			damage += d;
-			if(damage > 300) damage = 300;
+			if(damage > MAX_DAMAGE)
+				damage = MAX_DAMAGE;
 		}
 		updateText();
 	}
@@ -46,6 +50,7 @@ class PlayerMeter extends Sprite
 	private function updateText()
 	{
 		output.text = Std.string(damage) + "%";
-		output.color = Color.rgb(cast(0.85*damage,Int),0,0);
+		var gb : UInt = cast(255 - damage * 255 / MAX_DAMAGE, UInt);
+		output.color = Color.rgb(255,gb,gb);
 	}
 }

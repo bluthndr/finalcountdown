@@ -1,6 +1,6 @@
 import starling.events.*;
 import starling.display.*;
-import flash.geom.Rectangle;
+import flash.geom.*;
 import bitmasq.*;
 
 enum DIRECTION
@@ -226,6 +226,7 @@ class Player extends GameSprite
 
 	private function makeLimbs()
 	{
+		trace("Died at the speed: " + magnitude());
 		var limbs = new Array<PlayerLimb>();
 
 		var rightEye = new PlayerLimb("eye", PlayerImage.deg2rad(120));
@@ -272,7 +273,7 @@ class Player extends GameSprite
 		limbs.push(leftHand);
 		cast(parent, Level).addLimbs(limbs);
 		dead = true; respawn = 240;
-		visible = false;
+		visible = false; platOn = null;
 	}
 
 	public function kill()
@@ -280,7 +281,7 @@ class Player extends GameSprite
 
 	private function jump()
 	{
-		if(!jumpHeld && onPlatform())
+		if(!isStunned() && !jumpHeld && onPlatform())
 		{
 			vel.y = jumpHeight;
 			platOn = null;
@@ -291,20 +292,21 @@ class Player extends GameSprite
 
 	private function endJump()
 	{
-		if(!onPlatform() && vel.y < 0)
+		if(!isStunned() && !onPlatform() && vel.y < 0)
 			vel.y = 10 * weight;
 		jumpHeld = false;
 	}
 
 	private function fastFall()
 	{
-		if(!onPlatform() && (!jumpHeld || vel.y < 0) && vel.y < 15)
-			vel.y = 15;
+		if(!isStunned() && !onPlatform() && (!jumpHeld ||
+		vel.y < 0) && vel.y < 15){vel.y = 15;}
 	}
 
-	public function reset()
+	public function reset(p : Point)
 	{
-		x = spawnPos.x; y = spawnPos.y;
+		x = curRect.x = lastRect.x = lastPos.x = p.x;
+		y = curRect.y = lastRect.y = lastPos.y = p.y;
 		vel.x = vel.y = stunLength = 0;
 		visible = true; meter.reset();
 		dead = false; platOn = null;
@@ -337,12 +339,12 @@ class Player extends GameSprite
 	{
 		if(dead)
 		{
-			if(--respawn <= 0) reset();
+			if(--respawn <= 0) reset(cast(parent,Level).getSpawnPoint(this));
 			return;
 		}
 		else if(isStunned())
 		{
-			vel.x *= 0.8;
+			vel.x *= 0.75;
 			--stunLength;
 		}
 		else

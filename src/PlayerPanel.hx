@@ -1,7 +1,6 @@
 import starling.display.*;
 import bitmasq.*;
 import starling.utils.Color;
-import starling.text.TextField;
 import flash.ui.*;
 
 enum PlayerType
@@ -317,7 +316,7 @@ class PlayerPanel extends Sprite
 			case 4:
 				changeState(CHANGE_CTRL_TYPE);
 			case 5:
-				ready = !ready;
+				if(type != NONE) ready = !ready;
 				cast(parent, Game).checkReady();
 		}
 		updateText();
@@ -400,14 +399,13 @@ class PlayerPanel extends Sprite
 	}
 }
 
-class PanelText extends TextField
+class PanelText extends GameText
 {
 	private var quad : Quad;
 	public function new(s : String)
 	{
 		super(cast(Startup.stageWidth(0.2),Int),50,s);
 		fontSize = 10;
-		color = 0xffffff;
 		quad = new Quad(Startup.stageWidth(0.2),50,0);
 		addChild(quad);
 	}
