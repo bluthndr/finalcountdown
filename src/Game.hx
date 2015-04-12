@@ -129,26 +129,14 @@ class Game extends Sprite
 	{
 		//make walls
 		var walls = new Array<Wall>();
-		var wall = new Wall(Startup.stageWidth(), Startup.stageHeight(0.1));
+		var wall = new Wall(100, 200);
+		wall.x = Startup.stageWidth(0.5) - wall.width/2;
 		wall.y = Startup.stageHeight() - wall.height;
 		walls.push(wall);
 
-		var wall2 = new Wall(Startup.stageWidth(0.1), Startup.stageHeight());
-		wall2.x = -wall2.width;
-		walls.push(wall2);
-
-		var wall3 = wall2.clone();
-		wall3.x = Startup.stageWidth();
-		walls.push(wall3);
-
-		var wall4 = new Wall(100, 200);
-		wall4.x = Startup.stageWidth(0.5) - wall4.width/2;
-		wall4.y = wall.y - 200;
-		walls.push(wall4);
-
 		var lavas = new Array<Lava>();
 		var lava = new Lava(100,50);
-		lava.x = wall4.x; lava.y = wall4.y-50;
+		lava.x = wall.x; lava.y = wall.y-50;
 		lavas.push(lava);
 
 		//make platforms
@@ -177,13 +165,13 @@ class Game extends Sprite
 		wall6.x = plat2.x;
 		walls.push(wall6);
 
-
-		addChild(new Level(loadPlayers(), plats, walls, lavas));
+		addChild(new Level(Startup.stageWidth(), Startup.stageHeight(),
+								loadPlayers(), plats, walls, lavas));
 	}
 
-	private function loadPlayers() : Array<Player>
+	private function loadPlayers() : Array<GameSprite>
 	{
-		var players = new Array<Player>();
+		var players = new Array<GameSprite>();
 		var i = 0;
 		for(panel in panels)
 		{
@@ -191,6 +179,7 @@ class Game extends Sprite
 			{
 				var player = new Player(panel,i);
 				player.x = Startup.stageWidth(i*0.25);
+				player.y = 10;
 				players.push(player);
 			}
 			++i;

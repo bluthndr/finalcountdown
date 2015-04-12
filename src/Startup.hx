@@ -78,9 +78,9 @@ class Startup extends Sprite
 		});
 	}
 
-	public static function stageWidth(percentage : Float = 1.0) : Float
+	public inline static function stageWidth(percentage : Float = 1.0) : Float
 	{	return Starling.current.stage.stageWidth * percentage;}
 
-		public static function stageHeight(percentage : Float = 1.0) : Float
+	public inline static function stageHeight(percentage : Float = 1.0) : Float
 	{	return Starling.current.stage.stageHeight * percentage;}
 }

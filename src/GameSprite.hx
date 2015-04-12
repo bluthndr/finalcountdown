@@ -1,6 +1,7 @@
 import starling.display.Sprite;
 import flash.geom.Point;
 import flash.geom.Rectangle;
+import starling.events.Event;
 
 class GameSprite extends Sprite implements Collidable
 {
@@ -11,16 +12,19 @@ class GameSprite extends Sprite implements Collidable
 	private var platOn : Platform;
 	private var charWidth : Float;
 	private var charHeight : Float;
+	private var curRect : Rectangle;
+	private var lastRect : Rectangle;
+	private var spawnPos : Point;
 
 	//speed is the magnitude of the velocity vector squared
-	private static inline var LOW_BOUNCE_BOUND = 900;//30 squared
-	private static inline var HIGH_BOUNCE_BOUND = 3600;//60 sqaure
+	private static inline var LOW_BOUNCE_BOUND = 1024;//32 squared
+	private static inline var HIGH_BOUNCE_BOUND = 1600;//40 sqaured
 	/*If sprite hits a wall when:
 
-	LOW_BOUNCE_BOUND <= speed <= HIGH_BOUNCE_BOUND,
+	LOW_BOUNCE_BOUND <= magnitude <= GameSprite.HIGH_BOUNCE_BOUND,
 	then the sprite will bounce of the wall.
 
-	speed > HIGH_BOUNCE_BOUND, then the sprite will crash
+	magnitude > GameSprite.HIGH_BOUNCE_BOUND, then the sprite will crash
 	through the wall*/
 
 	private function new()
@@ -31,6 +35,12 @@ class GameSprite extends Sprite implements Collidable
 		weight = 0.15;
 		speed = 10;
 		platOn = null;
+
+		addEventListener(Event.ADDED, function(e:Event)
+		{
+			removeEventListeners(Event.ADDED);
+			spawnPos = new Point(x,y);
+		});
 	}
 
 	public function getPosition() : Point
@@ -67,22 +77,34 @@ class GameSprite extends Sprite implements Collidable
 			{
 				/*haxe.Log.clear();
 				trace("Left Collision!", x, y , wall.x, wall.y);*/
-				x = wall.x - charWidth;
-				vel.x = 0;
+				if(GameSprite.LOW_BOUNCE_BOUND <= magnitude()) vel.x *= -1;
+				else
+				{
+					vel.x = 0;
+					x = wall.x - charWidth;
+				}
 			}
 			else if(vel.x <= 0 && lastPos.x >= wall.x + wall.width)
 			{
 				/*haxe.Log.clear();
 				trace("Right Collision!", x, y , wall.x, wall.y);*/
-				x = wall.x + wall.width;
-				vel.x = 0;
+				if(GameSprite.LOW_BOUNCE_BOUND <= magnitude()) vel.x *= -1;
+				else
+				{
+					x = wall.x + wall.width;
+					vel.x = 0;
+				}
 			}
 			else if(vel.y < 0 && lastPos.y >= wall.y + wall.height)
 			{
 				/*haxe.Log.clear();
 				trace("Bottom Collision!", x, y , wall.x, wall.y);*/
-				y = wall.y + wall.height;
-				vel.y = 0;
+				if(GameSprite.LOW_BOUNCE_BOUND <= magnitude()) vel.y *= -1;
+				else
+				{
+					y = wall.y + wall.height;
+					vel.y = 0;
+				}
 			}
 		}
 	}
@@ -93,8 +115,8 @@ class GameSprite extends Sprite implements Collidable
 	public function onPlatform() : Bool
 	{	return platOn != null;}
 
-	public function magnitude()
-	{	return Math.pow(vel.x,2) + Math.pow(vel.y,x);}
+	public inline function magnitude() : Float
+	{	return vel.x*vel.x + vel.y*vel.y;}
 
 	public function gravity()
 	{
@@ -120,9 +142,15 @@ class GameSprite extends Sprite implements Collidable
 		}
 	}
 
-	//these functions must be overriden
-	public function getRect () : Rectangle
-	{	return new Rectangle();}
+	private function move()
+	{
+		lastPos.x = x; lastPos.y = y;
+		lastRect.x = curRect.x; lastRect.y = curRect.y;
 
-	private function move(){}
+		x += vel.x; y += vel.y;
+		curRect.x = x; curRect.y = y;
+	}
+
+	public function getRect() : Rectangle
+	{	return curRect.union(lastRect);}
 }

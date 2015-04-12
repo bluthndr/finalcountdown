@@ -17,12 +17,13 @@ class Player extends GameSprite
 	private var curDir : DIRECTION;
 	private var lastDir : DIRECTION;
 	private var controller : Controller;
-	private var curRect : Rectangle;
-	private var lastRect : Rectangle;
 	private var jumpHeld : Bool;
 	private var color : UInt;
 	private var stunLength : Int;
 	private var meter : PlayerMeter;
+	private var dead : Bool;
+	private var respawn : Int;
+	private var jumpHeight : Float;
 
 	public static inline var WIDTH = 48;
 	public static inline var HEIGHT = 64;
@@ -37,10 +38,11 @@ class Player extends GameSprite
 		lastDir = RIGHT;
 		stunLength = 0;
 		controller = p.getCtrls();
-		jumpHeld = false;
+		jumpHeld = dead = false;
 		charWidth = WIDTH;
 		charHeight = HEIGHT;
 		color = p.getColor();
+		jumpHeight = -30;
 
 		meter = new PlayerMeter(this, i);
 		image = new PlayerImage(color);
@@ -133,6 +135,60 @@ class Player extends GameSprite
 		else if(e.keyCode == controller.jump) endJump();
 	}
 
+	override public function wallCollision(wall : Platform)
+	{
+		if(this.getRect().intersects(wall.getRect()))
+		{
+			if(!onPlatform() && vel.y > 0 && lastPos.y <= wall.y - charHeight)
+			{
+				/*haxe.Log.clear();
+				trace("Top Collision!", x, y , wall.x, wall.y);*/
+				y = wall.y - charHeight;
+				vel.y = 0;
+				platOn = wall;
+			}
+			else if(vel.x >= 0 && lastPos.x <= wall.x - charWidth)
+			{
+				/*haxe.Log.clear();
+				trace("Left Collision!", x, y , wall.x, wall.y);*/
+				if(GameSprite.LOW_BOUNCE_BOUND <= magnitude() && magnitude() <= GameSprite.HIGH_BOUNCE_BOUND)
+				{vel.x *= -1;}
+				else if(GameSprite.HIGH_BOUNCE_BOUND < magnitude()){makeLimbs();}
+				else
+				{
+					vel.x = 0;
+					x = wall.x - charWidth;
+				}
+			}
+			else if(vel.x <= 0 && lastPos.x >= wall.x + wall.width)
+			{
+				/*haxe.Log.clear();
+				trace("Right Collision!", x, y , wall.x, wall.y);*/
+				if(GameSprite.LOW_BOUNCE_BOUND <= magnitude() && magnitude() <= GameSprite.HIGH_BOUNCE_BOUND)
+				{vel.x *= -1;}
+				else if(GameSprite.HIGH_BOUNCE_BOUND < magnitude()){makeLimbs();}
+				else
+				{
+					x = wall.x + wall.width;
+					vel.x = 0;
+				}
+			}
+			else if(vel.y < 0 && lastPos.y >= wall.y + wall.height)
+			{
+				/*haxe.Log.clear();
+				trace("Bottom Collision!", x, y , wall.x, wall.y);*/
+				if(GameSprite.LOW_BOUNCE_BOUND <= magnitude() && magnitude() <= GameSprite.HIGH_BOUNCE_BOUND)
+				{vel.y *= -1;}
+				else if(GameSprite.HIGH_BOUNCE_BOUND < magnitude()) {makeLimbs();}
+				else
+				{
+					y = wall.y + wall.height;
+					vel.y = 0;
+				}
+			}
+		}
+	}
+
 	override public function lavaCollision(lava : Lava)
 	{
 		if(this.getRect().intersects(lava.getRect()))
@@ -168,11 +224,65 @@ class Player extends GameSprite
 		}
 	}
 
+	private function makeLimbs()
+	{
+		var limbs = new Array<PlayerLimb>();
+
+		var rightEye = new PlayerLimb("eye", PlayerImage.deg2rad(120));
+		rightEye.setScale(24,24);
+		rightEye.x = 24 + x; rightEye.y = y;
+
+		var leftEye = new PlayerLimb("eye", PlayerImage.deg2rad(60));
+		leftEye.setScale(24,24);
+		leftEye.x = x; leftEye.y = y;
+
+		var headShell = new PlayerLimb("crack", PlayerImage.deg2rad(90));
+		headShell.setScale(WIDTH,HEIGHT/2);
+		headShell.setColor(color);
+		headShell.x = 12+x; headShell.y = 24+y;
+
+		var bottomShell = new PlayerLimb("crack", PlayerImage.deg2rad(180));
+		bottomShell.setScale(WIDTH,HEIGHT/2);
+		bottomShell.setColor(color);
+		bottomShell.x = 12+x; bottomShell.y = 44+y;
+
+		var leftHand = new PlayerLimb("fist", PlayerImage.deg2rad(150));
+		leftHand.setScale(24,24);
+		leftHand.x = x; leftHand.y = 24+y;
+
+		var rightHand = new PlayerLimb("fist", PlayerImage.deg2rad(30));
+		rightHand.setScale(24,24);
+		rightHand.x = 28+x; rightHand.y = 24+y;
+
+		var leftShoe = new PlayerLimb("shoe", PlayerImage.deg2rad(225));
+		leftShoe.setScale(24,12);
+		leftShoe.x = x; leftShoe.y = 52+y; leftShoe.setColor(PlayerImage.SHOE_COLOR);
+
+		var rightShoe = new PlayerLimb("shoe", PlayerImage.deg2rad(315));
+		rightShoe.setScale(24,12);
+		rightShoe.x = 24+x; rightShoe.y = 52+y; rightShoe.setColor(PlayerImage.SHOE_COLOR);
+
+		limbs.push(rightEye);
+		limbs.push(rightShoe);
+		limbs.push(rightHand);
+		limbs.push(headShell);
+		limbs.push(bottomShell);
+		limbs.push(leftEye);
+		limbs.push(leftShoe);
+		limbs.push(leftHand);
+		cast(parent, Level).addLimbs(limbs);
+		dead = true; respawn = 240;
+		visible = false;
+	}
+
+	public function kill()
+	{	makeLimbs();}
+
 	private function jump()
 	{
 		if(!jumpHeld && onPlatform())
 		{
-			vel.y = -30;
+			vel.y = jumpHeight;
 			platOn = null;
 			jumpHeld = true;
 			image.setAnimation(JUMP);
@@ -193,7 +303,12 @@ class Player extends GameSprite
 	}
 
 	public function reset()
-	{	x = y = vel.x = vel.y = 0;}
+	{
+		x = spawnPos.x; y = spawnPos.y;
+		vel.x = vel.y = stunLength = 0;
+		visible = true; meter.reset();
+		dead = false; platOn = null;
+	}
 
 	public function getColor() : UInt
 	{	return color;}
@@ -220,9 +335,14 @@ class Player extends GameSprite
 
 	override private function move()
 	{
-		if(isStunned())
+		if(dead)
 		{
-			vel.x *= 0.95;
+			if(--respawn <= 0) reset();
+			return;
+		}
+		else if(isStunned())
+		{
+			vel.x *= 0.8;
 			--stunLength;
 		}
 		else
@@ -249,14 +369,15 @@ class Player extends GameSprite
 			image.setAnimation(FALL);
 		}
 
-		lastPos.x = x; lastPos.y = y;
-		lastRect.x = curRect.x; lastRect.y = curRect.y;
-
-		x += vel.x; y += vel.y;
-		curRect.x = x; curRect.y = y;
+		super.move();
 		image.animate();
 	}
 
-	override public function getRect() : Rectangle
-	{	return curRect.union(lastRect);}
+	public function toString() : String
+	{
+		var s =  Std.string(getPosition()) + " " + Std.string(vel)
+		+ " " + curDir + " " + dead + " " + isStunned() + "\n";
+		for(i in 0...numChildren) s += Std.string(getChildAt(i)) + "\n";
+		return s;
+	}
 }

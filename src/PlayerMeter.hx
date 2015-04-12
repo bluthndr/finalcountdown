@@ -6,16 +6,13 @@ class PlayerMeter extends Sprite
 {
 	private var damage : Float;
 	private var output : TextField;
-	private var quad : Quad;
 
 	public function new(p : Player, i : UInt)
 	{
 		super();
 		damage = 0;
 
-		var q = new Quad(100,50, p.getColor());
-		q.alpha = 0.25;
-		addChild(q);
+		addChild(new Quad(100,50, p.getColor()));
 
 		output = new TextField(100, 50, Std.string(damage)+"%");
 		output.fontSize = 20;
@@ -34,10 +31,21 @@ class PlayerMeter extends Sprite
 			damage += d;
 			if(damage > 300) damage = 300;
 		}
-		output.text = Std.string(damage) + "%";
-		output.color = Color.rgb(cast(0.85*damage,Int),0,0);
+		updateText();
 	}
 
 	public function getDamage() : Float
 	{	return damage;}
+
+	public function reset()
+	{
+		damage = 0;
+		updateText();
+	}
+
+	private function updateText()
+	{
+		output.text = Std.string(damage) + "%";
+		output.color = Color.rgb(cast(0.85*damage,Int),0,0);
+	}
 }

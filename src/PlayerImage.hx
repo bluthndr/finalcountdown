@@ -20,11 +20,9 @@ class PlayerImage extends Sprite
 		4-Eyes
 		5-Shoes
 		6-Fists
-		7-Cracked Body
-		8-Cracked Body
 	*/
 
-	public static function deg2rad(deg : Float) : Float
+	public inline static function deg2rad(deg : Float) : Float
 	{	return deg * Math.PI / 180;}
 
 	public static inline var SHOE_COLOR = 0x222222;
@@ -32,25 +30,19 @@ class PlayerImage extends Sprite
 	private var curAnim : Animation;
 	private var frame : Int;
 	private static var standAnim : Array<Anim> =
-	[{x : 30, y : 6, rot : 0}, {x : 30, y : 58, rot : 0},
-	{x : 34, y : 30, rot : 0}, {x : 18, y : 29, rot : 0},
-	{x : 6, y : 6, rot : 0}, {x : 6, y : 58, rot : 0},
-	{x : 6, y : 30, rot : 0}, {x : 6, y : 6, rot : 0},
-	{x : 6, y : 6, rot : 0}];
+	[{x : 30, y : 6, rot : 0}, {x : 30, y : 58, rot : 0},{x : 34, y : 30, rot : 0},
+	{x : 18, y : 29, rot : 0}, {x : 6, y : 6, rot : 0}, {x : 6, y : 58, rot : 0},
+	{x : 6, y : 30, rot : 0}];
 
 	private static var jumpAnim : Array<Anim> =
-	[{x : 30, y : 6, rot : deg2rad(-45)}, {x : 30, y : 58, rot : deg2rad(22.5)},
-	{x : 34, y : 30, rot : 0}, {x : 18, y : 29, rot : 0},
-	{x : 6, y : 6, rot : deg2rad(-45)}, {x : 6, y : 58, rot : deg2rad(22.5)},
-	{x : 6, y : 30, rot : 0}, {x : 6, y : 6, rot : 0},
-	{x : 6, y : 6, rot : 0}];
+	[{x : 30, y : 6, rot : deg2rad(-45)}, {x : 30, y : 58, rot : deg2rad(22.5)},{x : 34, y : 30, rot : 0},
+	{x : 18, y : 29, rot : 0}, {x : 6, y : 6, rot : deg2rad(-45)}, {x : 6, y : 58, rot : deg2rad(22.5)},
+	{x : 6, y : 30, rot : 0}];
 
 	private static var fallAnim : Array<Anim> =
-	[{x : 30, y : 6, rot : deg2rad(45)}, {x : 30, y : 58, rot : deg2rad(-22.5)},
-	{x : 34, y : 30, rot : 0}, {x : 18, y : 29, rot : 0},
-	{x : 6, y : 6, rot : deg2rad(45)}, {x : 6, y : 58, rot : deg2rad(-22.5)},
-	{x : 6, y : 30, rot : 0}, {x : 6, y : 6, rot : 0},
-	{x : 6, y : 6, rot : 0}];
+	[{x : 30, y : 6, rot : deg2rad(45)}, {x : 30, y : 58, rot : deg2rad(-22.5)}, {x : 34, y : 30, rot : 0},
+	{x : 18, y : 29, rot : 0}, {x : 6, y : 6, rot : deg2rad(45)}, {x : 6, y : 58, rot : deg2rad(-22.5)},
+	{x : 6, y : 30, rot : 0}];
 
 	public function new(c:UInt)
 	{
@@ -83,12 +75,6 @@ class PlayerImage extends Sprite
 		images[6] = new Image(Root.assets.getTexture("fist"));
 		images[6].scaleX = set(24); images[6].scaleY = set(24);
 
-		images[7] = new Image(Root.assets.getTexture("crack"));
-		images[7].visible = false;
-
-		images[8] = new Image(Root.assets.getTexture("crack"));
-		images[8].visible = false;
-
 		for(im in images)
 		{
 			im.alignPivot();
@@ -97,7 +83,7 @@ class PlayerImage extends Sprite
 		setAnim(standAnim);
 	}
 
-	private function set(px : UInt) : Float
+	public inline static function set(px : Float) : Float
 	{	return px / 256;}
 
 	public function setAnimation(a : Animation)
