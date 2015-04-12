@@ -5,6 +5,8 @@ enum Animation
 	STAND;
 	JUMP;
 	FALL;
+	WALK;
+	STUN;
 }
 typedef Anim = {x : Float, y : Float, rot : Float}
 class PlayerImage extends Sprite
@@ -28,6 +30,7 @@ class PlayerImage extends Sprite
 	public static inline var SHOE_COLOR = 0x222222;
 
 	private var curAnim : Animation;
+	private var frame : Int;
 	private static var standAnim : Array<Anim> =
 	[{x : 30, y : 6, rot : 0}, {x : 30, y : 58, rot : 0},
 	{x : 34, y : 30, rot : 0}, {x : 18, y : 29, rot : 0},
@@ -90,8 +93,8 @@ class PlayerImage extends Sprite
 		{
 			im.alignPivot();
 			addChild(im);
-			setAnim(standAnim);
 		}
+		setAnim(standAnim);
 	}
 
 	private function set(px : UInt) : Float
@@ -101,12 +104,21 @@ class PlayerImage extends Sprite
 	{
 		switch(a)
 		{
-			case STAND:
+			case STAND, WALK:
+				//trace("Set stand/walk animation");
+				frame = 39;
 				setAnim(standAnim);
 			case JUMP:
+				//trace("Set jump animation");
 				setAnim(jumpAnim);
 			case FALL:
+				//trace("Set fall animation");
 				setAnim(fallAnim);
+			case STUN:
+				//trace("Set stun animation");
+				setAnim(fallAnim);
+			default:
+				//trace("Set default animation");
 		}
 		curAnim = a;
 	}
@@ -123,4 +135,45 @@ class PlayerImage extends Sprite
 
 	public function is(a : Animation) : Bool
 	{	return curAnim == a;}
+
+	public function animate()
+	{
+		++frame;
+		switch(curAnim)
+		{
+			case WALK:
+			switch(frame % 40)
+			{
+				case 0:
+					images[1].rotation = deg2rad(-45);
+					images[1].x = 30; images[1].y = 40;
+					images[5].rotation = deg2rad(45);
+					images[5].x = 6; images[5].y = 40;
+				case 5, 35:
+					images[1].rotation = deg2rad(-22.5);
+					images[1].x = 24; images[1].y = 49;
+					images[5].rotation = deg2rad(22.5);
+					images[5].x = 12; images[5].y = 49;
+				case 10, 30:
+					images[1].rotation = deg2rad(0);
+					images[1].x = 18; images[1].y = 58;
+					images[5].rotation = deg2rad(0);
+					images[5].x = 18; images[5].y = 58;
+				case 15, 25:
+					images[5].rotation = deg2rad(-22.5);
+					images[5].x = 24; images[5].y = 49;
+					images[1].rotation = deg2rad(22.5);
+					images[1].x = 12; images[1].y = 49;
+				case 20:
+					images[5].rotation = deg2rad(-45);
+					images[5].x = 30; images[5].y = 40;
+					images[1].rotation = deg2rad(45);
+					images[1].x = 6; images[1].y = 40;
+			}
+			case STUN:
+				images[0].rotation += deg2rad(30);
+				images[4].rotation += deg2rad(30);
+			default:
+		}
+	}
 }

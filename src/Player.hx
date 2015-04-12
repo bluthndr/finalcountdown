@@ -142,24 +142,28 @@ class Player extends GameSprite
 				meter.takeDamage(10);
 				vel.y = -lavaKnockback * meter.getDamage();
 				stunLength = 30;
+				image.setAnimation(STUN);
 			}
 			else if(vel.x >= 0 && lastPos.x <= lava.x - charWidth)
 			{
 				meter.takeDamage(10);
 				vel.x = -lavaKnockback * meter.getDamage();
 				stunLength = 30;
+				image.setAnimation(STUN);
 			}
 			else if(vel.x <= 0 && lastPos.x >= lava.x + lava.width)
 			{
 				meter.takeDamage(10);
 				vel.x = lavaKnockback * meter.getDamage();
 				stunLength = 30;
+				image.setAnimation(STUN);
 			}
 			else if(vel.y < 0 && lastPos.y >= lava.y + lava.height)
 			{
 				meter.takeDamage(10);
 				vel.y = lavaKnockback * meter.getDamage();
 				stunLength = 30;
+				image.setAnimation(STUN);
 			}
 		}
 	}
@@ -228,24 +232,29 @@ class Player extends GameSprite
 				case LEFT:
 					vel.x = -speed;
 					setDir(true);
+					if(onPlatform() && !image.is(WALK))
+						image.setAnimation(WALK);
 				case RIGHT:
 					vel.x = speed;
 					setDir(false);
+					if(onPlatform() && !image.is(WALK))
+						image.setAnimation(WALK);
 				default:
 					vel.x = 0;
 					if(onPlatform() && !image.is(STAND))
 						image.setAnimation(STAND);
 			}
 			if(curDir != NONE) lastDir = curDir;
-		}
-		if(!onPlatform() && image.is(JUMP) && vel.y > 0)
+			if(!onPlatform() && !image.is(FALL) && vel.y > 0)
 			image.setAnimation(FALL);
+		}
 
 		lastPos.x = x; lastPos.y = y;
 		lastRect.x = curRect.x; lastRect.y = curRect.y;
 
 		x += vel.x; y += vel.y;
 		curRect.x = x; curRect.y = y;
+		image.animate();
 	}
 
 	override public function getRect() : Rectangle
