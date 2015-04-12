@@ -12,27 +12,55 @@ enum DIRECTION
 
 class Player extends GameSprite
 {
-	private var body : Quad;
-	private var dir : DIRECTION;
+	private var image : PlayerImage;
+	private var bound : Quad;
+	private var curDir : DIRECTION;
+	private var lastDir : DIRECTION;
 	private var controller : Controller;
 	private var curRect : Rectangle;
 	private var lastRect : Rectangle;
 	private var jumpHeld : Bool;
+	private var color : UInt;
+	private var stunLength : Int;
+	private var meter : PlayerMeter;
+
+	public static inline var WIDTH = 48;
+	public static inline var HEIGHT = 64;
+
+	private static inline var lavaKnockback = 1.5;
 
 	public function new(p : PlayerPanel, i : UInt = 0)
 	{
 		super();
 
-		dir = NONE;
+		curDir = NONE;
+		lastDir = RIGHT;
+		stunLength = 0;
 		controller = p.getCtrls();
-		curRect = new Rectangle(x,y,50,50);
-		lastRect = new Rectangle(x,y,50,50);
 		jumpHeld = false;
+		charWidth = WIDTH;
+		charHeight = HEIGHT;
+		color = p.getColor();
 
-		body = new Quad(50,50,p.getColor());
-		addChild(body);
+		meter = new PlayerMeter(this, i);
+		image = new PlayerImage(color);
+		addChild(image);
+
+		bound = new Quad(WIDTH,HEIGHT,color);
+		bound.alpha = 0.5;
+		bound.visible = false;
+		addChild(bound);
+
+		curRect = new Rectangle(x,y,WIDTH,HEIGHT);
+		lastRect = curRect.clone();
 		addEventListener(Event.ADDED_TO_STAGE, addHandler);
 	}
+
+	public function toggleBound()
+	{	bound.visible = !bound.visible;}
+
+	public function addMeter(level : Level)
+	{	level.addChild(meter);}
 
 	private function addHandler(e:Event)
 	{
@@ -56,24 +84,22 @@ class Player extends GameSprite
 
 	private function gamepadInput(e:GamepadEvent)
 	{
-		/*haxe.Log.clear();
-		trace("Gamepad Event Triggered!");*/
 		if(e.deviceIndex == controller.padID)
 		{
 			if(e.control == controller.left)
 			{
 				switch(e.value)
 				{
-					case 1: dir = LEFT;
-					case 0: if(dir == LEFT) dir = NONE;
+					case 1: curDir = LEFT;
+					case 0: if(curDir == LEFT) curDir = NONE;
 				}
 			}
 			else if(e.control == controller.right)
 			{
 				switch(e.value)
 				{
-					case 1: dir = RIGHT;
-					case 0: if(dir == RIGHT) dir = NONE;
+					case 1: curDir = RIGHT;
+					case 0: if(curDir == RIGHT) curDir = NONE;
 				}
 			}
 			else if(e.control == controller.down)
@@ -94,17 +120,48 @@ class Player extends GameSprite
 
 	private function keyboardInputDown(e:KeyboardEvent)
 	{
-		if(e.keyCode == controller.left) dir = LEFT;
-		else if(e.keyCode == controller.right)dir = RIGHT;
+		if(e.keyCode == controller.left) curDir = LEFT;
+		else if(e.keyCode == controller.right)curDir = RIGHT;
 		else if(e.keyCode == controller.jump) jump();
 		else if(e.keyCode == controller.down) fastFall();
 	}
 
 	private function keyboardInputUp(e:KeyboardEvent)
 	{
-		if(e.keyCode == controller.left){if(dir == LEFT) dir = NONE;}
-		else if(e.keyCode == controller.right){if(dir == RIGHT) dir = NONE;}
+		if(e.keyCode == controller.left){if(curDir == LEFT) curDir = NONE;}
+		else if(e.keyCode == controller.right){if(curDir == RIGHT) curDir = NONE;}
 		else if(e.keyCode == controller.jump) endJump();
+	}
+
+	override public function lavaCollision(lava : Lava)
+	{
+		if(this.getRect().intersects(lava.getRect()))
+		{
+			if(!onPlatform() && vel.y > 0 && lastPos.y <= lava.y - charHeight)
+			{
+				meter.takeDamage(10);
+				vel.y = -lavaKnockback * meter.getDamage();
+				stunLength = 30;
+			}
+			else if(vel.x >= 0 && lastPos.x <= lava.x - charWidth)
+			{
+				meter.takeDamage(10);
+				vel.x = -lavaKnockback * meter.getDamage();
+				stunLength = 30;
+			}
+			else if(vel.x <= 0 && lastPos.x >= lava.x + lava.width)
+			{
+				meter.takeDamage(10);
+				vel.x = lavaKnockback * meter.getDamage();
+				stunLength = 30;
+			}
+			else if(vel.y < 0 && lastPos.y >= lava.y + lava.height)
+			{
+				meter.takeDamage(10);
+				vel.y = lavaKnockback * meter.getDamage();
+				stunLength = 30;
+			}
+		}
 	}
 
 	private function jump()
@@ -114,6 +171,7 @@ class Player extends GameSprite
 			vel.y = -30;
 			platOn = null;
 			jumpHeld = true;
+			image.setAnimation(JUMP);
 		}
 	}
 
@@ -134,16 +192,55 @@ class Player extends GameSprite
 	{	x = y = vel.x = vel.y = 0;}
 
 	public function getColor() : UInt
-	{	return body.color;}
+	{	return color;}
+
+	private function setDir(f: Bool)
+	{
+		if(lastDir != curDir)
+		{
+			if(f)
+			{
+				image.scaleX = Math.abs(image.scaleX) * -1;
+				image.x += WIDTH;
+			}
+			else
+			{
+				image.scaleX = Math.abs(image.scaleX);
+				image.x -= WIDTH;
+			}
+		}
+	}
+
+	public function isStunned() : Bool
+	{	return stunLength > 0;}
 
 	override private function move()
 	{
-		vel.x = switch(dir)
+		if(isStunned())
 		{
-			case LEFT: -speed;
-			case RIGHT: speed;
-			default: 0;
+			vel.x *= 0.95;
+			--stunLength;
 		}
+		else
+		{
+			switch(curDir)
+			{
+				case LEFT:
+					vel.x = -speed;
+					setDir(true);
+				case RIGHT:
+					vel.x = speed;
+					setDir(false);
+				default:
+					vel.x = 0;
+					if(onPlatform() && !image.is(STAND))
+						image.setAnimation(STAND);
+			}
+			if(curDir != NONE) lastDir = curDir;
+		}
+		if(!onPlatform() && image.is(JUMP) && vel.y > 0)
+			image.setAnimation(FALL);
+
 		lastPos.x = x; lastPos.y = y;
 		lastRect.x = curRect.x; lastRect.y = curRect.y;
 

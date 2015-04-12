@@ -11,6 +11,11 @@ class Root extends Sprite
 
 	public function start(startup:Startup)
 	{
+		assets.enqueue("assets/crack.png");
+		assets.enqueue("assets/eye.png");
+		assets.enqueue("assets/fist.png");
+		assets.enqueue("assets/body.png");
+		assets.enqueue("assets/shoe.png");
 		assets.loadQueue(function onProgress(ratio:Float)
 		{
 			if (ratio == 1)

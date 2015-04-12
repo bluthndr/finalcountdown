@@ -142,8 +142,14 @@ class Game extends Sprite
 		walls.push(wall3);
 
 		var wall4 = new Wall(100, 200);
-		wall4.x = Startup.stageWidth(0.5) - wall4.width/2; wall4.y = wall.y - 200;
+		wall4.x = Startup.stageWidth(0.5) - wall4.width/2;
+		wall4.y = wall.y - 200;
 		walls.push(wall4);
+
+		var lavas = new Array<Lava>();
+		var lava = new Lava(100,50);
+		lava.x = wall4.x; lava.y = wall4.y-50;
+		lavas.push(lava);
 
 		//make platforms
 		var plats = new Array<Platform>();
@@ -172,7 +178,7 @@ class Game extends Sprite
 		walls.push(wall6);
 
 
-		addChild(new Level(loadPlayers(), plats, walls));
+		addChild(new Level(loadPlayers(), plats, walls, lavas));
 	}
 
 	private function loadPlayers() : Array<Player>

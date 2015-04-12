@@ -1,22 +1,20 @@
 import starling.display.*;
 import starling.text.TextField;
 import starling.events.*;
-import starling.utils.*;
 import flash.ui.*;
 
 class Level extends Sprite
 {
 	private var players : Array<Player>;
-	private var meters : Array<Meter>;
 	private var level : LevelGeom;
 
-	public function new(ply : Array<Player>, plats : Array<Platform>, walls : Array<Wall>)
+	public function new(ply : Array<Player>, plats : Array<Platform>,
+	walls : Array<Wall>, ?lava : Array<Lava>)
 	{
 		super();
 
 		players = ply;
-		meters = new Array();
-		level = new LevelGeom(plats,walls);
+		level = new LevelGeom(plats,walls,lava);
 
 		addEventListener(Event.ADDED_TO_STAGE, addHandler);
 		addEventListener(KeyboardEvent.KEY_UP, debugFunc);
@@ -29,14 +27,9 @@ class Level extends Sprite
 
 		//add all children to level
 		addChild(level);
-		var i = 0;
-		for(ply in players)
-		{
-			meters.push(new Meter(ply,i));
-			addChild(ply);
-			++i;
-		}
-		for(m in meters) addChild(m);
+		for(ply in players) addChild(ply);
+		for(ply in players) ply.addMeter(this);
+		//for(i in 0...numChildren) trace(getChildAt(i));
 	}
 
 	private function collisionTest(e:Event)
@@ -54,6 +47,8 @@ class Level extends Sprite
 			}
 			for(wall in level.walls)
 			{	player.wallCollision(wall);}
+			for(l in level.lava)
+			{	player.lavaCollision(l);}
 		}
 	}
 
@@ -72,6 +67,9 @@ class Level extends Sprite
 				for(player in players)
 					player.reset();
 			case Keyboard.F3:
+				for(player in players)
+					player.toggleBound();
+			case Keyboard.F4:
 				haxe.Log.clear();
 				trace(level);
 			case Keyboard.ESCAPE:
@@ -84,8 +82,9 @@ class LevelGeom extends Sprite
 {
 	public var platforms : Array<Platform>;
 	public var walls : Array<Wall>;
+	public var lava : Array<Lava>;
 
-	public function new(p : Array<Platform>, w : Array<Wall>)
+	public function new(p : Array<Platform>, w : Array<Wall>, ?lv : Array<Lava>)
 	{
 		super();
 
@@ -94,6 +93,9 @@ class LevelGeom extends Sprite
 
 		platforms = p;
 		for(plat in platforms) addChild(plat);
+
+		lava = lv;
+		for(l in lava) addChild(l);
 		addEventListener(Event.ADDED, addHandle);
 	}
 
@@ -109,37 +111,5 @@ class LevelGeom extends Sprite
 		for(wall in walls) s += Std.string(wall) + "\n";
 		for(platform in platforms) s += Std.string(platform) + "\n";
 		return s;
-	}
-}
-
-class Meter extends Sprite
-{
-	private var damage : Float;
-	private var output : TextField;
-	private var quad : Quad;
-
-	public function new(p : Player, i : UInt)
-	{
-		super();
-		damage = 0;
-
-		var q = new Quad(100,50, p.getColor());
-		q.alpha = 0.25;
-		addChild(q);
-
-		output = new TextField(100, 50, "0%");
-		output.fontSize = 20;
-		output.vAlign = VAlign.CENTER;
-		output.hAlign = HAlign.CENTER;
-		addChild(output);
-
-		x = Startup.stageWidth(0.25*i) + Startup.stageWidth(0.05);
-		y = Startup.stageHeight(0.9);
-	}
-
-	public function takeDamage(d : Float)
-	{
-		damage += d;
-		output.text = Std.string(damage) + "5";
 	}
 }
