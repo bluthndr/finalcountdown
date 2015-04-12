@@ -171,18 +171,24 @@ class Game extends Sprite
 		wall6.x = plat2.x;
 		walls.push(wall6);
 
+
+		addChild(new Level(loadPlayers(), plats, walls));
+	}
+
+	private function loadPlayers() : Array<Player>
+	{
 		var players = new Array<Player>();
 		var i = 0;
 		for(panel in panels)
 		{
 			if(panel.isHuman())
 			{
-				var player = new Player(panel);
+				var player = new Player(panel,i);
 				player.x = Startup.stageWidth(i*0.25);
 				players.push(player);
 			}
 			++i;
 		}
-		addChild(new Level(players, plats, walls));
+		return players;
 	}
 }

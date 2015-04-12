@@ -316,7 +316,7 @@ class PlayerPanel extends Sprite
 		{
 			case 4:
 				changeState(CHANGE_CTRL_TYPE);
-			default:
+			case 5:
 				ready = !ready;
 				cast(parent, Game).checkReady();
 		}

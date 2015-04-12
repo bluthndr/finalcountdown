@@ -21,4 +21,10 @@ class Platform extends Sprite implements Collidable
 
 	public function getRect() : Rectangle
 	{	return new Rectangle(x,y, quad.width, quad.height);}
+
+	public function toString() : String
+	{
+		return Std.string(new flash.geom.Point(x,y)) + " ("
+		+ Std.string(quad.width) + "," + Std.string(quad.height) + ")";
+	}
 }

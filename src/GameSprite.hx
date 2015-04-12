@@ -8,18 +8,27 @@ class GameSprite extends Sprite implements Collidable
 	private var lastPos : Point;
 	private var speed : Float;
 	private var weight : Float;
-	private var onPlatform : Bool;
 	private var platOn : Platform;
+
+	//speed is the magnitude of the velocity vector squared
+	private static inline var LOW_BOUNCE_BOUND = 900;//30 squared
+	private static inline var HIGH_BOUNCE_BOUND = 3600;//60 sqaure
+	/*If sprite hits a wall when:
+
+	LOW_BOUNCE_BOUND <= speed <= HIGH_BOUNCE_BOUND,
+	then the sprite will bounce of the wall.
+
+	speed > HIGH_BOUNCE_BOUND, then the sprite will crash
+	through the wall*/
 
 	private function new()
 	{
 		super();
 		vel = new Point();
-		platOn = null;
 		lastPos = new Point();
 		weight = 0.15;
 		speed = 10;
-		onPlatform = false;
+		platOn = null;
 	}
 
 	public function getPosition() : Point
@@ -28,29 +37,28 @@ class GameSprite extends Sprite implements Collidable
 	public function getVelocity() : Point
 	{	return vel.clone();}
 
-	public function platformCollision(plat : Platform)
+	public function platformCollision(plat : Platform) : Bool
 	{
-		if(!onPlatform && vel.y > 0 && lastPos.y <= plat.y - height
+		if(!onPlatform() && vel.y > 0 && lastPos.y <= plat.y - height
 		&& this.getRect().intersects(plat.getRect()))
 		{
 			y = plat.y - height;
 			vel.y = 0;
-			onPlatform = true;
 			platOn = plat;
 		}
+		return onPlatform();
 	}
 
 	public function wallCollision(wall : Wall)
 	{
 		if(this.getRect().intersects(wall.getRect()))
 		{
-			if(!onPlatform && vel.y > 0 && lastPos.y <= wall.y - height)
+			if(!onPlatform() && vel.y > 0 && lastPos.y <= wall.y - height)
 			{
 				/*haxe.Log.clear();
 				trace("Top Collision!", x, y , wall.x, wall.y);*/
 				y = wall.y - height;
 				vel.y = 0;
-				onPlatform = true;
 				platOn = wall;
 			}
 			else if(vel.x >= 0 && lastPos.x <= wall.x - width)
@@ -77,10 +85,15 @@ class GameSprite extends Sprite implements Collidable
 		}
 	}
 
+	public function onPlatform() : Bool
+	{	return platOn != null;}
+
+	public function magnitude()
+	{	return Math.pow(vel.x,2) + Math.pow(vel.y,x);}
+
 	public function gravity()
 	{
-		move();
-		if(!onPlatform)
+		if(platOn == null)
 		{
 			if(vel.y < -5)
 			{	vel.y *= 1 - weight;}
@@ -92,18 +105,17 @@ class GameSprite extends Sprite implements Collidable
 			else
 			{	vel.y = 10 * weight;}
 		}
-		++y;
-		if(platOn == null)
-			onPlatform = false;
-		else
+		move();
+		if(onPlatform())
 		{
-			onPlatform = this.getRect().intersects(platOn.getRect());
-			if(!onPlatform) platOn = null;
+			var rect = getRect().clone();
+			rect.y += 10* weight;
+			if(!rect.intersects(platOn.getRect()))
+				platOn = null;
 		}
-		--y;
 	}
 
-	//must be overriden
+	//these functions must be overriden
 	public function getRect () : Rectangle
 	{	return new Rectangle();}
 
