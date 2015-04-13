@@ -15,7 +15,7 @@ class Level extends Sprite
 	private var timePassed : Float;
 
 	public function new(w : Float, h : Float, pos : Array<Point>, sp : Array<GameSprite>,
-	plats : Array<Platform>, walls : Array<Wall>, ?lava : Array<Lava>)
+	plats : Array<Platform>, walls : Array<Wall>, lava : Array<Lava>, bottomLava : Bool)
 	{
 		super();
 
@@ -25,7 +25,7 @@ class Level extends Sprite
 
 		spawnPoints = pos;
 		sprites = sp;
-		level = new LevelGeom(w,h,plats,walls,lava);
+		level = new LevelGeom(w,h,plats,walls,lava,bottomLava);
 
 		addEventListener(Event.ADDED_TO_STAGE, addHandler);
 		addEventListener(KeyboardEvent.KEY_UP, debugFunc);
@@ -199,18 +199,17 @@ class LevelGeom extends Sprite
 	public var lava : Array<Lava>;
 
 	public function new(wd : Float, h : Float, p : Array<Platform>,
-							w : Array<Wall>, ?lv : Array<Lava>)
+				w : Array<Wall>, ?lv : Array<Lava>, botLava : Bool)
 	{
 		super();
 
-		walls = w;
-		addBoundWalls(wd,h);
-		for(wall in walls) addChild(wall);
-
+		walls = w == null ? new Array<Wall>() : w;
 		platforms = p;
-		for(plat in platforms) addChild(plat);
+		lava = lv == null ? new Array<Lava>() : lv;
 
-		lava = lv;
+		addBoundWalls(wd,h,botLava);
+		for(wall in walls) addChild(wall);
+		for(plat in platforms) addChild(plat);
 		for(l in lava) addChild(l);
 		addEventListener(Event.ADDED, addHandle);
 	}
@@ -229,24 +228,26 @@ class LevelGeom extends Sprite
 		return s;
 	}
 
-	private function addBoundWalls(w : Float, h : Float)
+	private function addBoundWalls(w : Float, h : Float, botLava : Bool)
 	{
 		var wall = new Wall(w, Startup.stageHeight(0.1));
-		wall.y = h;
+		wall.y = -wall.height;
 
-		var wall2 = wall.clone();
-		wall2.y = -wall2.height;
+		var bot : Dynamic = botLava ?
+		new Lava(w,Startup.stageHeight(0.1)) : wall.clone();
+		bot.y = h;
 
-		var wall3 = new Wall(Startup.stageWidth(0.1), h);
-		wall3.x = -wall3.width;
+		var wall2 = new Wall(Startup.stageWidth(0.1), h);
+		wall2.x = -wall2.width;
 
-		var wall4 = wall3.clone();
-		wall4.x = w;
+		var wall3 = wall2.clone();
+		wall3.x = w;
 
+		if(botLava) lava.push(bot);
+		else walls.push(bot);
 		walls.push(wall);
 		walls.push(wall2);
 		walls.push(wall3);
-		walls.push(wall4);
 	}
 }
 

@@ -128,47 +128,28 @@ class Game extends Sprite
 
 	private function makeTestLevel()
 	{
-		//make walls
-		var walls = new Array<Wall>();
-		var wall = new Wall(100, 200);
-		wall.x = Startup.stageWidth(0.5) - wall.width/2;
-		wall.y = Startup.stageHeight() - wall.height;
-		walls.push(wall);
-
+		//lists
 		var lavas = new Array<Lava>();
-		var lava = new Lava(100,50);
-		lava.x = wall.x; lava.y = wall.y-50;
-		lavas.push(lava);
-
-		//make platforms
 		var plats = new Array<Platform>();
-		var plat = new Platform(Startup.stageWidth(0.1), Startup.stageHeight(0.05));
-		plat.y = wall.y - 100;
-		plats.push(plat);
+		var positions = new Array<Point>();
+		var levelWidth = Startup.stageWidth(2);
+		var levelHeight = Startup.stageHeight(1.1);
 
-		var plat2 = plat.clone();
-		plat2.x = Startup.stageWidth() - plat.width;
-		plats.push(plat2);
+		var i : Float = 0; var top = true;
+		while(i < levelWidth)
+		{
+			var plat = new Platform(100,50);
+			plat.x = i;
+			plat.y = levelHeight * (top ? 0.5 : 0.75);
+			top = !top;
+			plats.push(plat);
+			if(i < levelWidth * 0.4)
+				positions.push(new Point(i + 50, 10));
+			i += (levelWidth * 0.1);
+		}
 
-		var plat3 = plat.clone();
-		plat3.x += 150; plat3.y -= 100;
-		plats.push(plat3);
-
-		var plat4 = plat2.clone();
-		plat4.x -= 150; plat4.y -= 100;
-		plats.push(plat4);
-
-		var wall5 = new Wall(Startup.stageWidth(0.1), Startup.stageHeight(0.1));
-		wall5.x = plat.x; wall5.y = plat.y - 200;
-		walls.push(wall5);
-
-		var wall6 = wall5.clone();
-		wall6.x = plat2.x;
-		walls.push(wall6);
-
-		addChild(new Level(Startup.stageWidth(2), Startup.stageHeight(),
-		[new Point(0,10), new Point(160,10), new Point(Startup.stageWidth()-160,10),
-		new Point(Startup.stageWidth()-48,10)],loadPlayers(), plats, walls, lavas));
+		addChild(new Level(levelWidth,levelHeight,
+		positions,loadPlayers(), plats, null, null, true));
 	}
 
 	private function loadPlayers() : Array<GameSprite>
