@@ -10,6 +10,10 @@ class Level extends Sprite
 	private var spawnPoints : Array<Point>;
 	private var camera : Camera;
 
+	private var showFPS : Bool;
+	private var frameCount : UInt;
+	private var timePassed : Float;
+
 	public function new(w : Float, h : Float, pos : Array<Point>, sp : Array<GameSprite>,
 	plats : Array<Platform>, walls : Array<Wall>, ?lava : Array<Lava>)
 	{
@@ -25,6 +29,9 @@ class Level extends Sprite
 
 		addEventListener(Event.ADDED_TO_STAGE, addHandler);
 		addEventListener(KeyboardEvent.KEY_UP, debugFunc);
+
+		showFPS = false;
+		frameCount = 0; timePassed = 0;
 	}
 
 	private function addHandler(e:Event)
@@ -46,8 +53,19 @@ class Level extends Sprite
 		//for(i in 0...numChildren) trace(getChildAt(i));
 	}
 
-	private function update(e:Event)
+	private function update(e:EnterFrameEvent)
 	{
+		if(showFPS)
+		{
+			timePassed += e.passedTime;
+			++frameCount;
+			if(timePassed >= 1)
+			{
+				haxe.Log.clear();
+				trace("FPS: " + frameCount);
+				frameCount = 0; timePassed = 0;
+			}
+		}
 		//movement and collision detection
 		for(sprite in sprites)
 		{
@@ -130,6 +148,8 @@ class Level extends Sprite
 					try{cast(player,Player).kill();}
 					catch(d:Dynamic){continue;}
 				}
+			case Keyboard.F5:
+				showFPS = !showFPS;
 			case Keyboard.ESCAPE:
 				haxe.Log.clear();
 				cast(parent, Game).reset();

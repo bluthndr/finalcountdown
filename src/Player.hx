@@ -202,28 +202,33 @@ class Player extends GameSprite
 		{
 			if(!onPlatform() && vel.y > 0 && lastPos.y <= lava.y - charHeight)
 			{
-				stunLength = meter.takeDamage(10);
+				var stun = meter.takeDamage(10);
+				if(!isStunned()) stunLength = stun;
+				trace(stunLength);
 				vel.y = -lavaKnockback * meter.getDamage();
 				stunLength = Std.int(meter.getDamage() * (120 / PlayerMeter.MAX_DAMAGE));
 				image.setAnimation(STUN);
 			}
 			else if(vel.x >= 0 && lastPos.x <= lava.x - charWidth)
 			{
-				stunLength = meter.takeDamage(10);
+				var stun = meter.takeDamage(10);
+				if(!isStunned()) stunLength = stun;
 				vel.x = -lavaKnockback * meter.getDamage();
 				stunLength = Std.int(meter.getDamage() * (120 / PlayerMeter.MAX_DAMAGE));
 				image.setAnimation(STUN);
 			}
 			else if(vel.x <= 0 && lastPos.x >= lava.x + lava.width)
 			{
-				stunLength = meter.takeDamage(10);
+				var stun = meter.takeDamage(10);
+				if(!isStunned()) stunLength = stun;
 				vel.x = lavaKnockback * meter.getDamage();
 				stunLength = Std.int(meter.getDamage() * (120 / PlayerMeter.MAX_DAMAGE));
 				image.setAnimation(STUN);
 			}
 			else if(vel.y < 0 && lastPos.y >= lava.y + lava.height)
 			{
-				stunLength = meter.takeDamage(10);
+				var stun = meter.takeDamage(10);
+				if(!isStunned()) stunLength = stun;
 				vel.y = lavaKnockback * meter.getDamage();
 				image.setAnimation(STUN);
 			}
@@ -350,7 +355,7 @@ class Player extends GameSprite
 		}
 		else if(isStunned())
 		{
-			vel.x *= 0.75;
+			vel.x *= 0.8;
 			--stunLength;
 		}
 		else

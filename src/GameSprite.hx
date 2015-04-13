@@ -16,7 +16,7 @@ class GameSprite extends Sprite implements Collidable
 
 	//speed is the magnitude of the velocity vector squared
 	private static inline var LOW_BOUNCE_BOUND = 1024;//32 squared
-	private static inline var HIGH_BOUNCE_BOUND = 5041;//71 sqaured
+	private static inline var HIGH_BOUNCE_BOUND = 6400;//80 sqaured
 	/*If sprite hits a wall when:
 
 	LOW_BOUNCE_BOUND <= magnitude <= GameSprite.HIGH_BOUNCE_BOUND,
