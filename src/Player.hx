@@ -61,8 +61,8 @@ class Player extends GameSprite
 	public function toggleBound()
 	{	bound.visible = !bound.visible;}
 
-	public function addMeter(level : Level)
-	{	level.addChild(meter);}
+	public inline function alive() : Bool
+	{	return !dead;}
 
 	private function addHandler(e:Event)
 	{
@@ -82,6 +82,7 @@ class Player extends GameSprite
 			addEventListener(KeyboardEvent.KEY_UP, keyboardInputUp);
 			addEventListener(KeyboardEvent.KEY_DOWN, keyboardInputDown);
 		}
+		Game.game.addChild(meter);
 	}
 
 	private function gamepadInput(e:GamepadEvent)
@@ -151,9 +152,11 @@ class Player extends GameSprite
 			{
 				/*haxe.Log.clear();
 				trace("Left Collision!", x, y , wall.x, wall.y);*/
-				if(GameSprite.LOW_BOUNCE_BOUND <= magnitude() && magnitude() <= GameSprite.HIGH_BOUNCE_BOUND)
-				{vel.x *= -1;}
-				else if(GameSprite.HIGH_BOUNCE_BOUND < magnitude()){makeLimbs();}
+				if(isStunned())
+				{
+					if(magnitude() <= GameSprite.HIGH_BOUNCE_BOUND) vel.x *= -1;
+					else makeLimbs();
+				}
 				else
 				{
 					vel.x = 0;
@@ -164,9 +167,11 @@ class Player extends GameSprite
 			{
 				/*haxe.Log.clear();
 				trace("Right Collision!", x, y , wall.x, wall.y);*/
-				if(GameSprite.LOW_BOUNCE_BOUND <= magnitude() && magnitude() <= GameSprite.HIGH_BOUNCE_BOUND)
-				{vel.x *= -1;}
-				else if(GameSprite.HIGH_BOUNCE_BOUND < magnitude()){makeLimbs();}
+				if(isStunned())
+				{
+					if(magnitude() <= GameSprite.HIGH_BOUNCE_BOUND) vel.x *= -1;
+					else makeLimbs();
+				}
 				else
 				{
 					x = wall.x + wall.width;
@@ -177,9 +182,11 @@ class Player extends GameSprite
 			{
 				/*haxe.Log.clear();
 				trace("Bottom Collision!", x, y , wall.x, wall.y);*/
-				if(GameSprite.LOW_BOUNCE_BOUND <= magnitude() && magnitude() <= GameSprite.HIGH_BOUNCE_BOUND)
-				{vel.y *= -1;}
-				else if(GameSprite.HIGH_BOUNCE_BOUND < magnitude()) {makeLimbs();}
+				if(isStunned())
+				{
+					if(magnitude() <= GameSprite.HIGH_BOUNCE_BOUND) vel.y *= -1;
+					else makeLimbs();
+				}
 				else
 				{
 					y = wall.y + wall.height;
@@ -195,30 +202,29 @@ class Player extends GameSprite
 		{
 			if(!onPlatform() && vel.y > 0 && lastPos.y <= lava.y - charHeight)
 			{
-				meter.takeDamage(10);
+				stunLength = meter.takeDamage(10);
 				vel.y = -lavaKnockback * meter.getDamage();
-				stunLength = 30;
+				stunLength = Std.int(meter.getDamage() * (120 / PlayerMeter.MAX_DAMAGE));
 				image.setAnimation(STUN);
 			}
 			else if(vel.x >= 0 && lastPos.x <= lava.x - charWidth)
 			{
-				meter.takeDamage(10);
+				stunLength = meter.takeDamage(10);
 				vel.x = -lavaKnockback * meter.getDamage();
-				stunLength = 30;
+				stunLength = Std.int(meter.getDamage() * (120 / PlayerMeter.MAX_DAMAGE));
 				image.setAnimation(STUN);
 			}
 			else if(vel.x <= 0 && lastPos.x >= lava.x + lava.width)
 			{
-				meter.takeDamage(10);
+				stunLength = meter.takeDamage(10);
 				vel.x = lavaKnockback * meter.getDamage();
-				stunLength = 30;
+				stunLength = Std.int(meter.getDamage() * (120 / PlayerMeter.MAX_DAMAGE));
 				image.setAnimation(STUN);
 			}
 			else if(vel.y < 0 && lastPos.y >= lava.y + lava.height)
 			{
-				meter.takeDamage(10);
+				stunLength = meter.takeDamage(10);
 				vel.y = lavaKnockback * meter.getDamage();
-				stunLength = 30;
 				image.setAnimation(STUN);
 			}
 		}

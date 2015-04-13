@@ -1,18 +1,23 @@
 import starling.display.*;
 import starling.events.*;
 import flash.ui.*;
-import flash.geom.Point;
+import flash.geom.*;
 
 class Level extends Sprite
 {
 	private var sprites : Array<GameSprite>;
 	private var level : LevelGeom;
 	private var spawnPoints : Array<Point>;
+	private var camera : Camera;
 
 	public function new(w : Float, h : Float, pos : Array<Point>, sp : Array<GameSprite>,
 	plats : Array<Platform>, walls : Array<Wall>, ?lava : Array<Lava>)
 	{
 		super();
+
+		if(w < Startup.stageWidth()) w = Startup.stageWidth();
+		if(h < Startup.stageHeight()) h = Startup.stageHeight();
+		camera = new Camera(w,h);
 
 		spawnPoints = pos;
 		sprites = sp;
@@ -25,7 +30,7 @@ class Level extends Sprite
 	private function addHandler(e:Event)
 	{
 		removeEventListener(Event.ADDED_TO_STAGE, addHandler);
-		addEventListener(Event.ENTER_FRAME, collisionTest);
+		addEventListener(Event.ENTER_FRAME, update);
 
 		//add all children to level
 		addChild(level);
@@ -33,14 +38,17 @@ class Level extends Sprite
 		{
 			sprites[i].x = spawnPoints[i].x;
 			sprites[i].y = spawnPoints[i].y;
+			camera.x += sprites[i].x;
+			camera.y += sprites[i].y;
 			addChild(sprites[i]);
 		}
-		for(ply in sprites) cast(ply, Player).addMeter(this);
+		moveCamera();
 		//for(i in 0...numChildren) trace(getChildAt(i));
 	}
 
-	private function collisionTest(e:Event)
+	private function update(e:Event)
 	{
+		//movement and collision detection
 		for(sprite in sprites)
 		{
 			sprite.gravity();
@@ -58,6 +66,42 @@ class Level extends Sprite
 			for(l in level.lava)
 			{	sprite.lavaCollision(l);}
 		}
+
+		//camera movement
+		moveCamera();
+	}
+
+	private function moveCamera()
+	{
+		//find center between all players
+		var avg = new Point();
+		var plyNum = 0;
+		var positions = new Array<Point>();
+		for(sprite in sprites)
+		{
+			try
+			{
+				var ply = cast(sprite, Player);
+				if(ply.alive())
+				{
+					avg.x += sprite.x;
+					avg.y += sprite.y;
+					positions.push(new Point(sprite.x-Player.WIDTH,sprite.y-Player.HEIGHT));
+					positions.push(new Point(sprite.x+Player.WIDTH*2,sprite.y+Player.HEIGHT*2));
+					++plyNum;
+				}
+			}
+			catch(d:Dynamic) continue;
+		}
+		avg.x /= plyNum;
+		avg.y /= plyNum;
+
+		camera.move(avg, positions);
+
+		//move and scale level
+		x = Startup.stageWidth(0.5)-(camera.x*camera.scale);
+		y = Startup.stageHeight(0.5)-(camera.y*camera.scale);
+		scaleX = scaleY = camera.scale;
 	}
 
 	private function debugFunc(e:KeyboardEvent)
@@ -66,7 +110,7 @@ class Level extends Sprite
 		{
 			case Keyboard.F1:
 				haxe.Log.clear();
-				trace(this);
+				//trace(this);
 			case Keyboard.F2:
 				for(i in 0...sprites.length)
 				{
@@ -122,7 +166,7 @@ class Level extends Sprite
 	public function toString() : String
 	{
 		var s = "";
-		s += Std.string(level) + "\n";
+		s += Std.string(level);
 		for(sprite in sprites) s += Std.string(sprite) + "\n";
 		return s;
 	}
@@ -183,5 +227,60 @@ class LevelGeom extends Sprite
 		walls.push(wall2);
 		walls.push(wall3);
 		walls.push(wall4);
+	}
+}
+
+class Camera
+{
+	public var x : Float;
+	public var y : Float;
+	public var scale : Float;
+	public var lowBound : Point;
+	public var highBound : Point;
+	public inline static var cameraSpeed = 10;
+
+	public function new(w : Float, h : Float)
+	{
+		scale = 1;
+		lowBound = new Point(Startup.stageWidth(0.5),Startup.stageHeight(0.5));
+		highBound = new Point(w - lowBound.x, h - lowBound.y);
+		x = lowBound.x; y = lowBound.y;
+	}
+
+	public function getRect() : Rectangle
+	{
+		var scales = new Point(Startup.stageWidth(1/scale),Startup.stageHeight(1/scale));
+		var nx = x - Startup.stageWidth(0.5/scale);
+		var ny = y - Startup.stageHeight(0.5/scale);
+		return new Rectangle(nx, ny, scales.x, scales.y);
+	}
+
+	public function allOnScreen(points : Array<Point>) : Bool
+	{
+		var rect = getRect();
+		for(p in points)
+		{
+			if(!rect.containsPoint(p))
+				return false;
+		}
+		return true;
+	}
+
+	public function move(center : Point, positions : Array<Point>)
+	{
+		//move camera
+		if(x < center.x - cameraSpeed*2) x += cameraSpeed;
+		else if(x > center.x + cameraSpeed*2) x -= cameraSpeed;
+		if(y < center.y - cameraSpeed*2) y += cameraSpeed;
+		else if(y > center.y + cameraSpeed*2) y -= cameraSpeed;
+
+		scale = 1;
+		while(!allOnScreen(positions) && scale > 0.01) scale -= 0.01;
+
+		//bound camera
+		if(x < lowBound.x) x = lowBound.x;
+		else if(x > highBound.x) x = highBound.x;
+		if(y < lowBound.y) y = lowBound.y;
+		else if(y > highBound.y) y = highBound.y;
 	}
 }

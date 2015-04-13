@@ -13,10 +13,12 @@ class Game extends Sprite
 	private var panels : Array<PlayerPanel>;
 	private var changer : PlayerPanel;
 
+	public static var game : Game;
+
 	public function new()
 	{
 		super();
-
+		game = this;
 		panels = new Array();
 		for(i in 0...4)
 		{
@@ -164,7 +166,7 @@ class Game extends Sprite
 		wall6.x = plat2.x;
 		walls.push(wall6);
 
-		addChild(new Level(Startup.stageWidth(), Startup.stageHeight(),
+		addChild(new Level(Startup.stageWidth(2), Startup.stageHeight(),
 		[new Point(0,10), new Point(160,10), new Point(Startup.stageWidth()-160,10),
 		new Point(Startup.stageWidth()-48,10)],loadPlayers(), plats, walls, lavas));
 	}

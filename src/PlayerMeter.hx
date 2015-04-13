@@ -6,7 +6,7 @@ class PlayerMeter extends Sprite
 	private var damage : Float;
 	private var output : GameText;
 
-	private inline static var MAX_DAMAGE = 200;
+	public inline static var MAX_DAMAGE = 300;
 
 	public function new(p : Player, i : UInt)
 	{
@@ -27,18 +27,19 @@ class PlayerMeter extends Sprite
 		y = Startup.stageHeight(0.9);
 	}
 
-	public function takeDamage(d : Float)
+	public function takeDamage(d : Float, t : UInt = 60) : Int
 	{
 		if(damage < MAX_DAMAGE)
 		{
 			damage += d;
 			if(damage > MAX_DAMAGE)
 				damage = MAX_DAMAGE;
+			updateText();
 		}
-		updateText();
+		return Std.int(damage * t / MAX_DAMAGE);
 	}
 
-	public function getDamage() : Float
+	public inline function getDamage() : Float
 	{	return damage;}
 
 	public function reset()
