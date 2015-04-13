@@ -268,17 +268,27 @@ class Camera
 		x = lowBound.x; y = lowBound.y;
 	}
 
-	public function getRect() : Rectangle
+	public function getRect(?sc : Float) : Rectangle
 	{
-		var scales = new Point(Startup.stageWidth(1/scale),Startup.stageHeight(1/scale));
-		var nx = x - Startup.stageWidth(0.5/scale);
-		var ny = y - Startup.stageHeight(0.5/scale);
-		return new Rectangle(nx, ny, scales.x, scales.y);
+		if(sc != null)
+		{
+			var scales = new Point(Startup.stageWidth(1/sc),Startup.stageHeight(1/sc));
+			var nx = x - Startup.stageWidth(0.5/sc);
+			var ny = y - Startup.stageHeight(0.5/sc);
+			return new Rectangle(nx, ny, scales.x, scales.y);
+		}
+		else
+		{
+			var scales = new Point(Startup.stageWidth(1/scale),Startup.stageHeight(1/scale));
+			var nx = x - Startup.stageWidth(0.5/scale);
+			var ny = y - Startup.stageHeight(0.5/scale);
+			return new Rectangle(nx, ny, scales.x, scales.y);
+		}
 	}
 
-	public function allOnScreen(points : Array<Point>) : Bool
+	public function allOnScreen(points : Array<Point>, ?sc : Float) : Bool
 	{
-		var rect = getRect();
+		var rect = getRect(sc == null ? scale : sc);
 		for(p in points)
 		{
 			if(!rect.containsPoint(p))
@@ -295,8 +305,11 @@ class Camera
 		if(y < center.y - cameraSpeed*2) y += cameraSpeed;
 		else if(y > center.y + cameraSpeed*2) y -= cameraSpeed;
 
-		scale = 1;
-		while(!allOnScreen(positions) && scale > 0.01) scale -= 0.01;
+		var newScale : Float = 1;
+		while(!allOnScreen(positions, newScale) && newScale > 0.01) newScale -= 0.01;
+		if(scale < newScale - 0.05) scale += 0.01;
+		else if(scale > newScale + 0.05) scale -= 0.01;
+		else scale = newScale;
 
 		//bound camera
 		if(x < lowBound.x) x = lowBound.x;
