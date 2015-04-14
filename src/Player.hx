@@ -19,8 +19,10 @@ class Player extends GameSprite
 	private var lastDir : DIRECTION;
 	private var controller : Controller;
 	private var jumpHeld : Bool;
+	private var attHeld : Bool;
 	private var color : UInt;
 	private var stunLength : Int;
+	private var ivLength : Int;
 	private var meter : PlayerMeter;
 	private var dead : Bool;
 	private var respawn : Int;
@@ -35,8 +37,10 @@ class Player extends GameSprite
 
 	public static inline var END_ATTACK = "EndAttack";
 
-	public static var groundPunch : AttackProperties =
-	{knockback : new Point(0.75,-0.01), damage : 2};
+	public static var lgPunch : AttackProperties =
+	{knockback : new Point(0.75,-0.01), damage : 2, stun : 90};
+	public static var hgPunch : AttackProperties =
+	{knockback : new Point(1.5, -0.05), damage : 5, stun : 240};
 
 	public function new(p : PlayerPanel, i : UInt = 0)
 	{
@@ -44,9 +48,9 @@ class Player extends GameSprite
 
 		curDir = NONE;
 		lastDir = RIGHT;
-		stunLength = 0;
+		stunLength = ivLength = 0;
 		controller = p.getCtrls();
-		jumpHeld = dead = attacking = false;
+		jumpHeld = attHeld = dead = attacking = false;
 		charWidth = WIDTH;
 		charHeight = HEIGHT;
 		color = p.getColor();
@@ -134,9 +138,25 @@ class Player extends GameSprite
 			{
 				if(e.value == 1)
 				{
-					if(onPlatform())
-						attack(GROUND_PUNCH);
+					if(!attHeld)
+					{
+						if(onPlatform()) attack(LG_PUNCH);
+						attHeld = true;
+					}
 				}
+				else attHeld = false;
+			}
+			else if(e.control == controller.hAtt)
+			{
+				if(e.value == 1)
+				{
+					if(!attHeld)
+					{
+						if(onPlatform()) attack(HG_PUNCH);
+						attHeld = true;
+					}
+				}
+				else attHeld = false;
 			}
 		}
 	}
@@ -147,10 +167,18 @@ class Player extends GameSprite
 		else if(e.keyCode == controller.right)curDir = RIGHT;
 		else if(e.keyCode == controller.up) jump();
 		else if(e.keyCode == controller.down) fastFall();
-		else if(e.keyCode == controller.lAtt)
+		else if(!attHeld)
 		{
-			if(onPlatform())
-				attack(GROUND_PUNCH);
+			if(e.keyCode == controller.lAtt)
+			{
+				attHeld = true;
+				if(onPlatform()) attack(LG_PUNCH);
+			}
+			else if(e.keyCode == controller.hAtt)
+			{
+				attHeld = true;
+				if(onPlatform()) attack(HG_PUNCH);
+			}
 		}
 	}
 
@@ -159,6 +187,7 @@ class Player extends GameSprite
 		if(e.keyCode == controller.left){if(curDir == LEFT) curDir = NONE;}
 		else if(e.keyCode == controller.right){if(curDir == RIGHT) curDir = NONE;}
 		else if(e.keyCode == controller.up) endJump();
+		else if(e.keyCode == controller.lAtt || e.keyCode == controller.hAtt) attHeld = false;
 	}
 
 	override public function wallCollision(wall : Platform)
@@ -231,6 +260,7 @@ class Player extends GameSprite
 				if(!isStunned()) stunLength = stun;
 				vel.y = -lavaKnockback * meter.getDamage();
 				image.setAnimation(STUN);
+				endAttack();
 			}
 			else if(vel.x >= 0 && lastPos.x <= lava.x - charWidth)
 			{
@@ -238,6 +268,7 @@ class Player extends GameSprite
 				if(!isStunned()) stunLength = stun;
 				vel.x = -lavaKnockback * meter.getDamage();
 				image.setAnimation(STUN);
+				endAttack();
 			}
 			else if(vel.x <= 0 && lastPos.x >= lava.x + lava.width)
 			{
@@ -245,6 +276,7 @@ class Player extends GameSprite
 				if(!isStunned()) stunLength = stun;
 				vel.x = lavaKnockback * meter.getDamage();
 				image.setAnimation(STUN);
+				endAttack();
 			}
 			else if(vel.y < 0 && lastPos.y >= lava.y + lava.height)
 			{
@@ -252,12 +284,14 @@ class Player extends GameSprite
 				if(!isStunned()) stunLength = stun;
 				vel.y = lavaKnockback * meter.getDamage();
 				image.setAnimation(STUN);
+				endAttack();
 			}
 		}
 	}
 
 	public function playerCollision(attacker : Player) : Bool
 	{
+		if(ivLength > 0) return false;
 		var body = image.getCircle(3);
 		for(attack in attacker.image.getAttacks())
 		{
@@ -265,15 +299,19 @@ class Player extends GameSprite
 			{
 				var att = switch(attack.type)
 				{
-					case GROUND_PUNCH: groundPunch;
-					default: {damage : 0.0, knockback : new Point()};
+					case LG_PUNCH: lgPunch;
+					case HG_PUNCH: hgPunch;
+					default: {damage : 0.0, knockback : new Point(), stun : 0};
 				};
-				var stun = meter.takeDamage(att.damage);
+				if(!isStunned())
+					stunLength = meter.takeDamage(att.damage, att.stun);
 				vel.x = att.knockback.x * meter.getDamage();
 				if(attacker.image.scaleX < 0) vel.x *= -1;
 				vel.y = att.knockback.y * meter.getDamage();
 				while(magnitude() < 900) {vel.x *= 1.1; vel.y *= 1.1;}
 				image.setAnimation(STUN);
+				endAttack();
+				ivLength = 5;
 				return true;
 			}
 		}
@@ -348,7 +386,7 @@ class Player extends GameSprite
 
 	private function endJump()
 	{
-		if(!isStunned() && !onPlatform() && vel.y < 0)
+		if(!attacking && !isStunned() && !onPlatform() && vel.y < 0)
 			vel.y = 10 * weight;
 		jumpHeld = false;
 	}
@@ -363,14 +401,19 @@ class Player extends GameSprite
 	{
 		switch(at)
 		{
-			case GROUND_PUNCH:
+			case LG_PUNCH:
 				attacking = true;
-				image.setAnimation(PUNCH1);
+				image.setAnimation(LGP);
 				vel.x = vel.y = 0;
+			case HG_PUNCH:
+				attacking = true;
+				image.setAnimation(HGP);
+				vel.x = vel.y = 0;
+			default:
 		}
 	}
 
-	private function endAttack()
+	private inline function endAttack()
 	{	attacking = false;}
 
 	public function reset(p : Point)
@@ -455,6 +498,7 @@ class Player extends GameSprite
 
 		super.move();
 		image.animate();
+		if(ivLength > 0) --ivLength;
 	}
 
 	public function toString() : String

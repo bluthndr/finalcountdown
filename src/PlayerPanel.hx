@@ -37,8 +37,8 @@ class PlayerPanel extends Sprite
 	{
 		super();
 		state = REGULAR;
-		if(id == 0) {type = HUMAN; ready = false;}
-		else {type = NONE; ready = true;}
+		type = id == 0 ? HUMAN : NONE;
+		ready = false;
 		r = Std.random(256);
 		g = Std.random(256);
 		b = Std.random(256);
@@ -142,8 +142,8 @@ class PlayerPanel extends Sprite
 	----------------		----------------
 	0->playerType			0->left
 	1->r					1->right
-	2->g					2->up
-	3->b					3->down
+	2->g					2->down
+	3->b					3->up
 	4->Change Controls		4->lAtt
 	5->Ready				5->hAtt
 	*/
@@ -172,8 +172,8 @@ class PlayerPanel extends Sprite
 					{
 						case 0: ctrl.left = val;
 						case 1: ctrl.right = val;
-						case 2: ctrl.up = val;
-						case 3: ctrl.down = val;
+						case 2: ctrl.down = val;
+						case 3: ctrl.up = val;
 						case 4: ctrl.lAtt = val;
 						default:
 							ctrl.hAtt = val;
@@ -196,14 +196,17 @@ class PlayerPanel extends Sprite
 			{
 				if(e.control == ctrl.left) leftAction();
 				else if(e.control == ctrl.right) rightAction();
-				else if(e.control == ctrl.up) upAction();
+				else if(e.control == Gamepad.D_UP) upAction();
 				else if(e.control == ctrl.down) downAction();
-				else if(e.control == ctrl.lAtt || e.control == ctrl.hAtt)
-					confirmAction();
+				else if(e.control == ctrl.up || e.control == ctrl.lAtt ||
+				e.control == ctrl.hAtt)	{confirmAction();}
 			}
 			case CHANGE_CTRL_TYPE:
 				ctrl.gamepad = true;
 				ctrl.padID = e.deviceIndex;
+				ctrl.left = Gamepad.D_LEFT;
+				ctrl.right = Gamepad.D_RIGHT;
+				ctrl.down = Gamepad.D_DOWN;
 				changeState(CHANGE_CTRL);
 			case CHANGE_CTRL:
 			{
@@ -211,10 +214,10 @@ class PlayerPanel extends Sprite
 				{
 					switch(curChoice++ % choiceNum)
 					{
-						case 0: ctrl.left = e.control;
+						/*case 0: ctrl.left = e.control;
 						case 1: ctrl.right = e.control;
-						case 2: ctrl.up = e.control;
-						case 3: ctrl.down = e.control;
+						case 2: ctrl.down = e.control;*/
+						case 3: ctrl.up = e.control;
 						case 4: ctrl.lAtt = e.control;
 						default:
 							ctrl.hAtt = e.control;
@@ -342,7 +345,7 @@ class PlayerPanel extends Sprite
 			case CHANGE_CTRL:
 				if(cast(parent, Game).canChange(this))
 				{
-					curChoice = 0;
+					curChoice = ctrl.gamepad ? 3 : 0;
 					ready = false;
 					state = CHANGE_CTRL;
 				}
@@ -388,8 +391,8 @@ class PlayerPanel extends Sprite
 					{
 						case 0: "Left";
 						case 1: "Right";
-						case 2: "Jump";
-						case 3: "Down";
+						case 2: "Down";
+						case 3: "Jump";
 						case 4: "Light Attack";
 						default: "Heavy Attack";
 					}) + " button";

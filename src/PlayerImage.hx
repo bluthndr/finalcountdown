@@ -10,7 +10,10 @@ enum Animation
 	FALL;
 	WALK;
 	STUN;
-	PUNCH1;
+
+	//punches
+	HGP;
+	LGP;
 }
 
 class PlayerImage extends Sprite
@@ -115,9 +118,12 @@ class PlayerImage extends Sprite
 			case STUN:
 				//trace("Set stun animation");
 				setAnim(PlayerAnimations.stunAnim);
-			case PUNCH1:
+			case LGP:
 				//trace("set punch1 animation");
-				setAnim(PlayerAnimations.punchAnim1[0]);
+				setAnim(PlayerAnimations.lgPunchAnim[0]);
+			case HGP:
+				//trace("set punch2 animation");
+				setAnim(PlayerAnimations.hgPunchAnim[0]);
 			default:
 				//trace("Set default animation");
 		}
@@ -150,10 +156,13 @@ class PlayerImage extends Sprite
 			case FALL:
 				setAnimation(STUN);
 			case STUN:
-				setAnimation(PUNCH1);
-			case PUNCH1:
-				if(++curFrame >= cast(PlayerAnimations.punchAnim1.length, UInt)) setAnimation(STAND);
-				else setAnim(PlayerAnimations.punchAnim1[curFrame]);
+				setAnimation(LGP);
+			case LGP:
+				if(++curFrame >= cast(PlayerAnimations.lgPunchAnim.length, UInt)) setAnimation(HGP);
+				else setAnim(PlayerAnimations.lgPunchAnim[curFrame]);
+			case HGP:
+				if(++curFrame >= cast(PlayerAnimations.hgPunchAnim.length, UInt)) setAnimation(STAND);
+				else setAnim(PlayerAnimations.hgPunchAnim[curFrame]);
 			default:
 				setAnimation(STAND);
 		}
@@ -185,12 +194,25 @@ class PlayerImage extends Sprite
 			case WALK:
 				if(frameCount % 6 == 0)
 					setAnim(PlayerAnimations.walkAnim[++curFrame % PlayerAnimations.walkAnim.length]);
-			case PUNCH1:
+			case LGP:
 				//trace("Animate punch");
 				if(frameCount % 2 == 0)
 				{
-					if(++curFrame < cast(PlayerAnimations.punchAnim1.length, UInt))
-						setAnim(PlayerAnimations.punchAnim1[curFrame % PlayerAnimations.punchAnim1.length]);
+					if(++curFrame < cast(PlayerAnimations.lgPunchAnim.length, UInt))
+						setAnim(PlayerAnimations.lgPunchAnim[curFrame % PlayerAnimations.lgPunchAnim.length]);
+					else
+					{
+						//trace("Dispatch event...");
+						parent.dispatchEventWith(Player.END_ATTACK);
+						if(!hasEventListener(Event.ENTER_FRAME)) setAnimation(STAND);
+						else curFrame = 0;
+					}
+				}
+			case HGP:
+				if(frameCount % 2 == 0)
+				{
+					if(++curFrame < cast(PlayerAnimations.hgPunchAnim.length, UInt))
+						setAnim(PlayerAnimations.hgPunchAnim[curFrame % PlayerAnimations.hgPunchAnim.length]);
 					else
 					{
 						//trace("Dispatch event...");
@@ -214,17 +236,21 @@ class PlayerImage extends Sprite
 
 	public function getAttacks() : Array<Attack>
 	{
-		var rval = new Array<Attack>();
-		switch(curAnim)
+		return switch(curAnim)
 		{
-			case PUNCH1:
+			case LGP:
 				if(curFrame >= 4)
+					[{area : circles[6], type : LG_PUNCH}];
+				else [];
+			case HGP:
+				if(curFrame >= 9 && curFrame <= 12)
 				{
-					rval.push({area : circles[6], type : GROUND_PUNCH});
+					[{area : circles[2], type : HG_PUNCH},
+					{area : circles[6], type : HG_PUNCH}];
 				}
-			default:
-		}
-		return rval;
+				else [];
+			default: [];
+		};
 	}
 
 	public function save()
