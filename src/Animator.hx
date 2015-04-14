@@ -1,6 +1,7 @@
 import starling.display.Sprite;
 import flash.ui.*;
 import starling.events.*;
+import PlayerAttributes;
 
 class Animator extends Sprite
 {
@@ -76,6 +77,8 @@ class Animator extends Sprite
 					image.nextAnim();
 				case Keyboard.F3:
 					image.loopCur();
+				case Keyboard.F5:
+					image.toggleCircles();
 				case Keyboard.F9:
 					showInstructions();
 				case Keyboard.ESCAPE:

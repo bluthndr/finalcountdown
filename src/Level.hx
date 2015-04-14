@@ -83,6 +83,23 @@ class Level extends Sprite
 			{	sprite.wallCollision(wall);}
 			for(l in level.lava)
 			{	sprite.lavaCollision(l);}
+			try
+			{
+				var p1 = cast(sprite, Player);
+				for(sp2 in sprites)
+				{
+					if(sp2 != p1)
+					{
+						try
+						{
+							var p2 = cast(sp2, Player);
+							if(p1.playerCollision(p2)) break;
+						}
+						catch(d:Dynamic) continue;
+					}
+				}
+			}
+			catch(d:Dynamic)continue;
 		}
 
 		//camera movement

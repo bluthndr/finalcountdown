@@ -2,6 +2,7 @@ import starling.events.*;
 import starling.display.*;
 import flash.geom.*;
 import bitmasq.*;
+import PlayerAttributes;
 
 enum DIRECTION
 {
@@ -24,11 +25,18 @@ class Player extends GameSprite
 	private var dead : Bool;
 	private var respawn : Int;
 	private var jumpHeight : Float;
+	private var attacking : Bool;
 
 	public static inline var WIDTH = 48;
 	public static inline var HEIGHT = 64;
 
 	private static inline var lavaKnockback = 1.5;
+	private static inline var lavaStun = 120;
+
+	public static inline var END_ATTACK = "EndAttack";
+
+	public static var groundPunch : AttackProperties =
+	{knockback : new Point(0.75,-0.01), damage : 2};
 
 	public function new(p : PlayerPanel, i : UInt = 0)
 	{
@@ -38,7 +46,7 @@ class Player extends GameSprite
 		lastDir = RIGHT;
 		stunLength = 0;
 		controller = p.getCtrls();
-		jumpHeld = dead = false;
+		jumpHeld = dead = attacking = false;
 		charWidth = WIDTH;
 		charHeight = HEIGHT;
 		color = p.getColor();
@@ -56,10 +64,14 @@ class Player extends GameSprite
 		curRect = new Rectangle(x,y,WIDTH,HEIGHT);
 		lastRect = curRect.clone();
 		addEventListener(Event.ADDED_TO_STAGE, addHandler);
+		addEventListener(END_ATTACK, endAttack);
 	}
 
 	public function toggleBound()
-	{	bound.visible = !bound.visible;}
+	{
+		//bound.visible = !bound.visible;
+		image.toggleCircles();
+	}
 
 	public inline function alive() : Bool
 	{	return !dead;}
@@ -110,12 +122,20 @@ class Player extends GameSprite
 				if(e.value == 1)
 					fastFall();
 			}
-			else if(e.control == controller.jump)
+			else if(e.control == controller.up)
 			{
 				switch(e.value)
 				{
 					case 1: jump();
 					case 0: endJump();
+				}
+			}
+			else if(e.control == controller.lAtt)
+			{
+				if(e.value == 1)
+				{
+					if(onPlatform())
+						attack(GROUND_PUNCH);
 				}
 			}
 		}
@@ -125,15 +145,20 @@ class Player extends GameSprite
 	{
 		if(e.keyCode == controller.left) curDir = LEFT;
 		else if(e.keyCode == controller.right)curDir = RIGHT;
-		else if(e.keyCode == controller.jump) jump();
+		else if(e.keyCode == controller.up) jump();
 		else if(e.keyCode == controller.down) fastFall();
+		else if(e.keyCode == controller.lAtt)
+		{
+			if(onPlatform())
+				attack(GROUND_PUNCH);
+		}
 	}
 
 	private function keyboardInputUp(e:KeyboardEvent)
 	{
 		if(e.keyCode == controller.left){if(curDir == LEFT) curDir = NONE;}
 		else if(e.keyCode == controller.right){if(curDir == RIGHT) curDir = NONE;}
-		else if(e.keyCode == controller.jump) endJump();
+		else if(e.keyCode == controller.up) endJump();
 	}
 
 	override public function wallCollision(wall : Platform)
@@ -202,33 +227,57 @@ class Player extends GameSprite
 		{
 			if(!onPlatform() && vel.y > 0 && lastPos.y <= lava.y - charHeight)
 			{
-				var stun = meter.takeDamage(10);
+				var stun = meter.takeDamage(10,lavaStun);
 				if(!isStunned()) stunLength = stun;
 				vel.y = -lavaKnockback * meter.getDamage();
 				image.setAnimation(STUN);
 			}
 			else if(vel.x >= 0 && lastPos.x <= lava.x - charWidth)
 			{
-				var stun = meter.takeDamage(10);
+				var stun = meter.takeDamage(10,lavaStun);
 				if(!isStunned()) stunLength = stun;
 				vel.x = -lavaKnockback * meter.getDamage();
 				image.setAnimation(STUN);
 			}
 			else if(vel.x <= 0 && lastPos.x >= lava.x + lava.width)
 			{
-				var stun = meter.takeDamage(10);
+				var stun = meter.takeDamage(10,lavaStun);
 				if(!isStunned()) stunLength = stun;
 				vel.x = lavaKnockback * meter.getDamage();
 				image.setAnimation(STUN);
 			}
 			else if(vel.y < 0 && lastPos.y >= lava.y + lava.height)
 			{
-				var stun = meter.takeDamage(10);
+				var stun = meter.takeDamage(10,lavaStun);
 				if(!isStunned()) stunLength = stun;
 				vel.y = lavaKnockback * meter.getDamage();
 				image.setAnimation(STUN);
 			}
 		}
+	}
+
+	public function playerCollision(attacker : Player) : Bool
+	{
+		var body = image.getCircle(3);
+		for(attack in attacker.image.getAttacks())
+		{
+			if(body.intersects(attack.area))
+			{
+				var att = switch(attack.type)
+				{
+					case GROUND_PUNCH: groundPunch;
+					default: {damage : 0.0, knockback : new Point()};
+				};
+				var stun = meter.takeDamage(att.damage);
+				vel.x = att.knockback.x * meter.getDamage();
+				if(attacker.image.scaleX < 0) vel.x *= -1;
+				vel.y = att.knockback.y * meter.getDamage();
+				while(magnitude() < 900) {vel.x *= 1.1; vel.y *= 1.1;}
+				image.setAnimation(STUN);
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private function makeLimbs()
@@ -244,12 +293,12 @@ class Player extends GameSprite
 		leftEye.setScale(24,24);
 		leftEye.x = x; leftEye.y = y;
 
-		var headShell = new PlayerLimb("crack", PlayerImage.deg2rad(90));
+		var headShell = new PlayerLimb("crack", PlayerImage.deg2rad(90),true);
 		headShell.setScale(WIDTH,HEIGHT/2);
 		headShell.setColor(color);
 		headShell.x = 12+x; headShell.y = 24+y;
 
-		var bottomShell = new PlayerLimb("crack", PlayerImage.deg2rad(180));
+		var bottomShell = new PlayerLimb("crack", PlayerImage.deg2rad(180),false);
 		bottomShell.setScale(WIDTH,HEIGHT/2);
 		bottomShell.setColor(color);
 		bottomShell.x = 12+x; bottomShell.y = 44+y;
@@ -288,7 +337,7 @@ class Player extends GameSprite
 
 	private function jump()
 	{
-		if(!isStunned() && !jumpHeld && onPlatform())
+		if(!attacking && !isStunned() && !jumpHeld && onPlatform())
 		{
 			vel.y = jumpHeight;
 			platOn = null;
@@ -310,13 +359,27 @@ class Player extends GameSprite
 		vel.y < 0) && vel.y < 15){vel.y = 15;}
 	}
 
+	private function attack(at : PLAYER_ATTACK)
+	{
+		switch(at)
+		{
+			case GROUND_PUNCH:
+				attacking = true;
+				image.setAnimation(PUNCH1);
+				vel.x = vel.y = 0;
+		}
+	}
+
+	private function endAttack()
+	{	attacking = false;}
+
 	public function reset(p : Point)
 	{
 		x = curRect.x = lastRect.x = lastPos.x = p.x;
 		y = curRect.y = lastRect.y = lastPos.y = p.y;
 		vel.x = vel.y = stunLength = 0;
 		visible = true; meter.reset();
-		dead = false; platOn = null;
+		dead = attacking = false; platOn = null;
 	}
 
 	public function getColor() : UInt
@@ -354,24 +417,36 @@ class Player extends GameSprite
 			vel.x *= 0.8;
 			--stunLength;
 		}
-		else
+		else if(!attacking)
 		{
 			switch(curDir)
 			{
 				case LEFT:
-					vel.x = -speed;
-					setDir(true);
-					if(onPlatform() && !image.is(WALK))
-						image.setAnimation(WALK);
+					if(vel.x < -speed*2) vel.x *= 0.8;
+					else
+					{
+						vel.x = -speed;
+						setDir(true);
+						if(onPlatform() && !image.is(WALK))
+							image.setAnimation(WALK);
+					}
 				case RIGHT:
-					vel.x = speed;
-					setDir(false);
-					if(onPlatform() && !image.is(WALK))
-						image.setAnimation(WALK);
+					if(vel.x > speed*2) vel.x *= 0.8;
+					else
+					{
+						vel.x = speed;
+						setDir(false);
+						if(onPlatform() && !image.is(WALK))
+							image.setAnimation(WALK);
+					}
 				default:
-					vel.x = 0;
-					if(onPlatform() && !image.is(STAND))
-						image.setAnimation(STAND);
+					if(Math.abs(vel.x) > speed*2) vel.x *= 0.8;
+					else
+					{
+						vel.x = 0;
+						if(onPlatform() && !image.is(STAND))
+							image.setAnimation(STAND);
+					}
 			}
 			if(curDir != NONE) lastDir = curDir;
 			if(!onPlatform() && !image.is(FALL) && vel.y > 0)

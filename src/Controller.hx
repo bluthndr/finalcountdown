@@ -1,2 +1,2 @@
 typedef Controller = {left : Float, right : Float, up : Float, down : Float,
-jump : Float, attack : Float, gamepad : Bool, padID : Float}
+lAtt : Float, hAtt : Float, gamepad : Bool, padID : Float}

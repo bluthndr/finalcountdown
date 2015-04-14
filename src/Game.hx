@@ -146,7 +146,7 @@ class Game extends Sprite
 		{
 			var plat = new Platform(100,50);
 			plat.x = i;
-			plat.y = levelHeight * (top ? 0.5 : 0.75);
+			plat.y = levelHeight * (top ? 0.6 : 0.85);
 			top = !top;
 			plats.push(plat);
 			if(i < levelWidth * 0.4)
@@ -155,7 +155,7 @@ class Game extends Sprite
 		}
 
 		addChild(new Level(levelWidth,levelHeight,
-		positions,loadPlayers(), plats, null, null, true));
+		positions,loadPlayers(), plats, null, null, false));
 	}
 
 	private function loadPlayers() : Array<GameSprite>

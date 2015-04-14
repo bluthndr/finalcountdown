@@ -114,7 +114,7 @@ class GameSprite extends Sprite implements Collidable
 	{
 		if(platOn == null)
 		{
-			if(vel.y < -5)
+			if(vel.y < -1)
 			{	vel.y *= 1 - weight;}
 			else if(vel.y > 0)
 			{

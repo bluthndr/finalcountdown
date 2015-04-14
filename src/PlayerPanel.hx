@@ -72,8 +72,8 @@ class PlayerPanel extends Sprite
 				right : Keyboard.D,
 				down : Keyboard.S,
 				up : Keyboard.W,
-				jump : Keyboard.Q,
-				attack : Keyboard.E,
+				lAtt : Keyboard.Q,
+				hAtt : Keyboard.E,
 				gamepad : false,
 				padID: -1};
 			case 2:
@@ -81,8 +81,8 @@ class PlayerPanel extends Sprite
 				right : Keyboard.H,
 				down : Keyboard.G,
 				up : Keyboard.T,
-				jump : Keyboard.R,
-				attack : Keyboard.Y,
+				lAtt : Keyboard.R,
+				hAtt : Keyboard.Y,
 				gamepad : false,
 				padID: -1};
 			case 3:
@@ -90,8 +90,8 @@ class PlayerPanel extends Sprite
 				right : Keyboard.L,
 				down : Keyboard.K,
 				up : Keyboard.I,
-				jump : Keyboard.U,
-				attack : Keyboard.O,
+				lAtt : Keyboard.U,
+				hAtt : Keyboard.O,
 				gamepad : false,
 				padID: -1};
 			default:
@@ -99,8 +99,8 @@ class PlayerPanel extends Sprite
 				right : Keyboard.RIGHT,
 				down : Keyboard.DOWN,
 				up : Keyboard.UP,
-				jump : Keyboard.SPACE,
-				attack : Keyboard.ENTER,
+				lAtt : Keyboard.SHIFT,
+				hAtt : Keyboard.CONTROL,
 				gamepad : false,
 				padID: -1};
 		};
@@ -144,8 +144,8 @@ class PlayerPanel extends Sprite
 	1->r					1->right
 	2->g					2->up
 	3->b					3->down
-	4->Change Controls		4->jump
-	5->Ready				5->attack
+	4->Change Controls		4->lAtt
+	5->Ready				5->hAtt
 	*/
 	public function checkKeyInput(val : Float)
 	{
@@ -159,7 +159,7 @@ class PlayerPanel extends Sprite
 				else if(val == ctrl.right) rightAction();
 				else if(val == ctrl.up) upAction();
 				else if(val == ctrl.down) downAction();
-				else if(val == ctrl.jump) confirmAction();
+				else if(val == ctrl.lAtt || val == ctrl.hAtt) confirmAction();
 			}
 			case CHANGE_CTRL_TYPE:
 				ctrl.gamepad = false;
@@ -174,9 +174,9 @@ class PlayerPanel extends Sprite
 						case 1: ctrl.right = val;
 						case 2: ctrl.up = val;
 						case 3: ctrl.down = val;
-						case 4: ctrl.jump = val;
+						case 4: ctrl.lAtt = val;
 						default:
-							ctrl.attack = val;
+							ctrl.hAtt = val;
 							changeState(REGULAR);
 					}
 					updateText();
@@ -198,26 +198,26 @@ class PlayerPanel extends Sprite
 				else if(e.control == ctrl.right) rightAction();
 				else if(e.control == ctrl.up) upAction();
 				else if(e.control == ctrl.down) downAction();
-				else if(e.control == ctrl.jump) confirmAction();
+				else if(e.control == ctrl.lAtt || e.control == ctrl.hAtt)
+					confirmAction();
 			}
 			case CHANGE_CTRL_TYPE:
 				ctrl.gamepad = true;
 				ctrl.padID = e.deviceIndex;
-				ctrl.left = Gamepad.D_LEFT;
-				ctrl.right = Gamepad.D_RIGHT;
-				ctrl.up = Gamepad.D_UP;
-				ctrl.down = Gamepad.D_DOWN;
 				changeState(CHANGE_CTRL);
 			case CHANGE_CTRL:
 			{
-				if(ctrl.gamepad &&
-				e.deviceIndex == ctrl.padID)
+				if(ctrl.gamepad)
 				{
 					switch(curChoice++ % choiceNum)
 					{
-						case 4: ctrl.jump = e.control;
+						case 0: ctrl.left = e.control;
+						case 1: ctrl.right = e.control;
+						case 2: ctrl.up = e.control;
+						case 3: ctrl.down = e.control;
+						case 4: ctrl.lAtt = e.control;
 						default:
-							ctrl.attack = e.control;
+							ctrl.hAtt = e.control;
 							changeState(REGULAR);
 					}
 					updateText();
@@ -342,7 +342,7 @@ class PlayerPanel extends Sprite
 			case CHANGE_CTRL:
 				if(cast(parent, Game).canChange(this))
 				{
-					curChoice = ctrl.gamepad ? 4 : 0;
+					curChoice = 0;
 					ready = false;
 					state = CHANGE_CTRL;
 				}
@@ -382,16 +382,17 @@ class PlayerPanel extends Sprite
 			{
 				texts[i].text = switch(i)
 				{
-					case 0: "Type: " + (ctrl.gamepad ? "Gamepad" : "Keyboard");
-					case 1: switch(curChoice % choiceNum)
+					case 0: "Control Type: " + (ctrl.gamepad ? "Gamepad" : "Keyboard");
+					case 1: "Press a button/key to set the ";
+					case 2: (switch(curChoice % choiceNum)
 					{
 						case 0: "Left";
 						case 1: "Right";
-						case 2: "Up";
+						case 2: "Jump";
 						case 3: "Down";
-						case 4: "Jump";
-						default: "Attack";
-					};
+						case 4: "Light Attack";
+						default: "Heavy Attack";
+					}) + " button";
 					default: "";
 				};
 			}

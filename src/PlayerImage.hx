@@ -1,6 +1,7 @@
 import starling.display.*;
 import flash.filesystem.*;
 import starling.events.*;
+import PlayerAttributes;
 
 enum Animation
 {
@@ -11,10 +12,11 @@ enum Animation
 	STUN;
 	PUNCH1;
 }
-typedef Anim = {x : Float, y : Float, rot : Float}
+
 class PlayerImage extends Sprite
 {
 	private var images : Array<Image>;
+	private var circles : Array<HitCircle>;
 	/*
 		0-Eyes (right)
 		1-Shoes (right)
@@ -33,97 +35,6 @@ class PlayerImage extends Sprite
 	private var curAnim : Animation;
 	private var frameCount : UInt;
 	private var curFrame : UInt;
-	private static var standAnim : Array<Anim> =
-	[{x : 30, y : 6, rot : 0}, {x : 30, y : 58, rot : 0},{x : 34, y : 30, rot : 0},
-	{x : 18, y : 29, rot : 0}, {x : 6, y : 6, rot : 0}, {x : 6, y : 58, rot : 0},
-	{x : 6, y : 30, rot : 0}];
-
-	private static var jumpAnim : Array<Anim> =
-	[{x : 30, y : 6, rot : deg2rad(-45)}, {x : 30, y : 58, rot : deg2rad(22.5)},{x : 34, y : 30, rot : 0},
-	{x : 18, y : 29, rot : 0}, {x : 6, y : 6, rot : deg2rad(-45)}, {x : 6, y : 58, rot : deg2rad(22.5)},
-	{x : 6, y : 30, rot : 0}];
-
-	private static var fallAnim : Array<Anim> =
-	[{x : 30, y : 6, rot : deg2rad(45)}, {x : 30, y : 58, rot : deg2rad(-22.5)}, {x : 34, y : 30, rot : 0},
-	{x : 18, y : 29, rot : 0}, {x : 6, y : 6, rot : deg2rad(45)}, {x : 6, y : 58, rot : deg2rad(-22.5)},
-	{x : 6, y : 30, rot : 0}];
-
-	private static var stunAnim : Array<Anim> =
-	[{x : 30, y : 6, rot : 0}, {x : 31, y : 52, rot : -0.34906585039886584},
-	{x : 50, y : -3, rot : -0.6981317007977318}, {x : 18, y : 29, rot : 0},
-	{x : 6, y : 6, rot : 0}, {x : 11, y : 53, rot : -0.34906585039886584},
-	{x : -12, y : -2, rot : -2.268928027592628}];
-
-	private static var walkAnim : Array<Array<Anim>> = [
-	//0
-	[{x : 30, y : 6, rot : 0}, {x : 37, y : 47, rot : 0}, {x : 34, y : 30, rot : 0},
-	{x : 18, y : 29, rot : 0}, {x : 6, y : 6, rot : 0}, {x : 6, y : 58, rot : 0},
-	{x : 6, y : 30, rot : 0}],
-
-	//1
-	[{x : 30, y : 6, rot : 0}, {x : 44, y : 45, rot : -0.6981317007977318}, {x : 34, y : 30, rot : 0},
-	{x : 18, y : 29, rot : 0}, {x : 6, y : 6, rot : 0}, {x : -3, y : 48, rot : 0.6981317007977318},
-	{x : 6, y : 30, rot : 0}],
-
-	//2
-	[{x : 30, y : 6, rot : 0}, {x : 19, y : 58, rot : 5.551115123125783e-17}, {x : 34, y : 30, rot : 0},
-	{x : 18, y : 29, rot : 0}, {x : 6, y : 6, rot : 0}, {x : 4, y : 48, rot : 1.5707963267948966},
-	{x : 6, y : 30, rot : 0}],
-
-	//3
-	[{x : 30, y : 6, rot : 0}, {x : 11, y : 58, rot : 5.551115123125783e-17}, {x : 34, y : 30, rot : 0},
-	{x : 18, y : 29, rot : 0}, {x : 6, y : 6, rot : 0}, {x : 17, y : 48, rot : 1.5707963267948966},
-	{x : 6, y : 30, rot : 0}],
-
-	//4
-	[{x : 30, y : 6, rot : 0}, {x : 6, y : 58, rot : 0}, {x : 34, y : 30, rot : 0},
-	{x : 18, y : 29, rot : 0}, {x : 6, y : 6, rot : 0}, {x : 37, y : 47, rot : 0},
-	{x : 6, y : 30, rot : 0}],
-
-	//5
-	[{x : 30, y : 6, rot : 0}, {x : -3, y : 48, rot : 0.6981317007977318}, {x : 34, y : 30, rot : 0},
-	{x : 18, y : 29, rot : 0}, {x : 6, y : 6, rot : 0}, {x : 44, y : 45, rot : -0.6981317007977318},
-	{x : 6, y : 30, rot : 0}],
-
-	//6
-	[{x : 30, y : 6, rot : 0}, {x : 4, y : 48, rot : 1.5707963267948966}, {x : 34, y : 30, rot : 0},
-	{x : 18, y : 29, rot : 0}, {x : 6, y : 6, rot : 0}, {x : 19, y : 58, rot : 5.551115123125783e-17},
-	{x : 6, y : 30, rot : 0}],
-
-	//7
-	[{x : 30, y : 6, rot : 0}, {x : 17, y : 48, rot : 1.5707963267948966}, {x : 34, y : 30, rot : 0},
-	{x : 18, y : 29, rot : 0}, {x : 6, y : 6, rot : 0}, {x : 11, y : 58, rot : 5.551115123125783e-17},
-	{x : 6, y : 30, rot : 0}]
-	];
-
-	private static var punchAnim1 : Array<Array<Anim>> =
-	[
-
-	//0
-	[{x : 30, y : 6, rot : 0}, {x : 30, y : 58, rot : 0}, {x : 34, y : 30, rot : 0},
-	{x : 18, y : 29, rot : 0}, {x : 6, y : 6, rot : 0}, {x : 2, y : 54, rot : 0.5235987755982988},
-	{x : -4, y : 30, rot : 0}],
-
-	//1
-	[{x : 30, y : 6, rot : 0}, {x : 30, y : 58, rot : 0}, {x : 26, y : 30, rot : 0},
-	{x : 18, y : 29, rot : 0}, {x : 6, y : 6, rot : 0}, {x : 2, y : 54, rot : 0.5235987755982988},
-	{x : 11, y : 30, rot : 0}],
-
-	//2
-	[{x : 30, y : 6, rot : 0}, {x : 30, y : 58, rot : 0}, {x : 26, y : 30, rot : 0},
-	{x : 18, y : 29, rot : 0}, {x : 6, y : 6, rot : 0}, {x : 10, y : 54, rot : 0.5235987755982988},
-	{x : 25, y : 30, rot : 0}],
-
-	//3
-	[{x : 30, y : 6, rot : 0}, {x : 30, y : 58, rot : 0}, {x : 26, y : 30, rot : 0},
-	{x : 18, y : 29, rot : 0}, {x : 6, y : 6, rot : 0}, {x : 17, y : 58, rot : -5.551115123125783e-17},
-	{x : 41, y : 30, rot : 0}],
-
-	//4
-	[{x : 30, y : 6, rot : 0}, {x : 30, y : 58, rot : 0}, {x : 26, y : 30, rot : 0},
-	{x : 18, y : 29, rot : 0}, {x : 6, y : 6, rot : 0}, {x : 17, y : 58, rot : -5.551115123125783e-17},
-	{x : 56, y : 30, rot : 0}],
-	];
 
 	public function new(c:UInt=0xffffff)
 	{
@@ -162,11 +73,28 @@ class PlayerImage extends Sprite
 			im.alignPivot();
 			addChild(im);
 		}
-		setAnim(standAnim);
+
+		//init hit circles
+		circles = new Array();
+		for(image in images) circles.push(new HitCircle(image));
+		for(circle in circles)
+		{
+			addChild(circle);
+			circle.visible = false;
+		}
+		circles[1].scaleX = circles[1].scaleY = circles[5].scaleX =
+		circles[5].scaleY = set(18);
+		setAnim(PlayerAnimations.standAnim);
 	}
 
 	public inline static function set(px : Float) : Float
 	{	return px / 256;}
+
+	public function toggleCircles()
+	{
+		for(circle in circles)
+			circle.visible = !circle.visible;
+	}
 
 	public function setAnimation(a : Animation)
 	{
@@ -174,22 +102,22 @@ class PlayerImage extends Sprite
 		{
 			case STAND:
 				//trace("Set stand animation");
-				setAnim(standAnim);
+				setAnim(PlayerAnimations.standAnim);
 			case WALK:
 				//trace("Set walk animation");
-				setAnim(walkAnim[0]);
+				setAnim(PlayerAnimations.walkAnim[0]);
 			case JUMP:
 				//trace("Set jump animation");
-				setAnim(jumpAnim);
+				setAnim(PlayerAnimations.jumpAnim);
 			case FALL:
 				//trace("Set fall animation");
-				setAnim(fallAnim);
+				setAnim(PlayerAnimations.fallAnim);
 			case STUN:
 				//trace("Set stun animation");
-				setAnim(stunAnim);
+				setAnim(PlayerAnimations.stunAnim);
 			case PUNCH1:
-				//trace("set punch animation");
-				setAnim(punchAnim1[0]);
+				//trace("set punch1 animation");
+				setAnim(PlayerAnimations.punchAnim1[0]);
 			default:
 				//trace("Set default animation");
 		}
@@ -201,8 +129,8 @@ class PlayerImage extends Sprite
 	{
 		for(i in 0...images.length)
 		{
-			images[i].x = a[i].x;
-			images[i].y = a[i].y;
+			circles[i].x = images[i].x = a[i].x;
+			circles[i].y = images[i].y = a[i].y;
 			images[i].rotation = a[i].rot;
 		}
 	}
@@ -215,8 +143,8 @@ class PlayerImage extends Sprite
 				setAnimation(WALK);
 				curFrame = 0;
 			case WALK:
-				if(++curFrame >= cast(walkAnim.length, UInt)) setAnimation(JUMP);
-				else setAnim(walkAnim[curFrame]);
+				if(++curFrame >= cast(PlayerAnimations.walkAnim.length, UInt)) setAnimation(JUMP);
+				else setAnim(PlayerAnimations.walkAnim[curFrame]);
 			case JUMP:
 				setAnimation(FALL);
 			case FALL:
@@ -224,8 +152,8 @@ class PlayerImage extends Sprite
 			case STUN:
 				setAnimation(PUNCH1);
 			case PUNCH1:
-				if(++curFrame >= cast(punchAnim1.length, UInt)) setAnimation(STAND);
-				else setAnim(punchAnim1[curFrame]);
+				if(++curFrame >= cast(PlayerAnimations.punchAnim1.length, UInt)) setAnimation(STAND);
+				else setAnim(PlayerAnimations.punchAnim1[curFrame]);
 			default:
 				setAnimation(STAND);
 		}
@@ -256,10 +184,21 @@ class PlayerImage extends Sprite
 		{
 			case WALK:
 				if(frameCount % 6 == 0)
-					setAnim(walkAnim[++curFrame % walkAnim.length]);
+					setAnim(PlayerAnimations.walkAnim[++curFrame % PlayerAnimations.walkAnim.length]);
 			case PUNCH1:
-				if(frameCount % 3 == 0)
-					setAnim(punchAnim1[++curFrame % punchAnim1.length]);
+				//trace("Animate punch");
+				if(frameCount % 2 == 0)
+				{
+					if(++curFrame < cast(PlayerAnimations.punchAnim1.length, UInt))
+						setAnim(PlayerAnimations.punchAnim1[curFrame % PlayerAnimations.punchAnim1.length]);
+					else
+					{
+						//trace("Dispatch event...");
+						parent.dispatchEventWith(Player.END_ATTACK);
+						if(!hasEventListener(Event.ENTER_FRAME)) setAnimation(STAND);
+						else curFrame = 0;
+					}
+				}
 			case STUN:
 				images[0].rotation += deg2rad(30);
 				images[4].rotation += deg2rad(30);
@@ -269,6 +208,24 @@ class PlayerImage extends Sprite
 
 	public inline function get(c:UInt) : Image
 	{	return images[c % 7];}
+
+	public function getCircle(c:UInt) : HitCircle
+	{	return circles[c % 7];}
+
+	public function getAttacks() : Array<Attack>
+	{
+		var rval = new Array<Attack>();
+		switch(curAnim)
+		{
+			case PUNCH1:
+				if(curFrame >= 4)
+				{
+					rval.push({area : circles[6], type : GROUND_PUNCH});
+				}
+			default:
+		}
+		return rval;
+	}
 
 	public function save()
 	{

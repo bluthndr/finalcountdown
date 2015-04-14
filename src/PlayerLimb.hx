@@ -8,7 +8,7 @@ class PlayerLimb extends GameSprite
 	private var lifetime : Int;
 
 	private inline static var speedMod = 7.5;
-	public function new(lt : String, angle : Float)
+	public function new(lt : String, angle : Float, ?flip : Bool)
 	{
 		super();
 
@@ -16,6 +16,7 @@ class PlayerLimb extends GameSprite
 		if(image == null) throw "Wrong texture!";
 		addChild(image);
 
+		if(lt == "crack") rotation = flip ? Math.PI : 0;
 		vel.x = Math.cos(angle) * speedMod;
 		vel.y = -Math.sin(angle) * speedMod;
 		weight = 0.3;
