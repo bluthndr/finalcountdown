@@ -80,13 +80,19 @@ class Game extends Sprite
 		for(panel in panels) addChild(panel);
 		var t = new GameText(title.length*50,100,title);
 		t.x = Startup.stageWidth(0.5) - t.width/2;
-		t.fontSize = 50;
+		t.fontSize = 50; t.color = 0;
 		addChild(t);
 	}
 
 	private function keyInput(e:KeyboardEvent)
 	{
-		if(changer == null)
+		if(e.keyCode == Keyboard.F1)
+		{
+			removeInputListeners();
+			removeChildren();
+			addChild(new Animator());
+		}
+		else if(changer == null)
 		{
 			for(panel in panels)
 			{ panel.checkKeyInput(e.keyCode);}
