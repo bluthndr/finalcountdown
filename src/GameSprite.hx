@@ -53,9 +53,9 @@ class GameSprite extends Sprite implements Collidable
 		return onPlatform();
 	}
 
-	public function wallCollision(wall : Platform)
+	public function wallCollision(wall : Rectangle, ?sp : Platform)
 	{
-		if(this.getRect().intersects(wall.getRect()))
+		if(this.getRect().intersects(wall))
 		{
 			if(!onPlatform() && vel.y > 0 && lastPos.y <= wall.y - charHeight)
 			{
@@ -63,7 +63,7 @@ class GameSprite extends Sprite implements Collidable
 				trace("Top Collision!", x, y , wall.x, wall.y);*/
 				y = wall.y - charHeight;
 				vel.y = 0;
-				platOn = wall;
+				if(sp != null) platOn = sp;
 			}
 			else if(vel.x >= 0 && lastPos.x <= wall.x - charWidth)
 			{
@@ -102,7 +102,7 @@ class GameSprite extends Sprite implements Collidable
 	}
 
 	public function lavaCollision(lava : Lava)
-	{	wallCollision(lava);}
+	{	wallCollision(lava.getRect());}
 
 	public function onPlatform() : Bool
 	{	return platOn != null;}

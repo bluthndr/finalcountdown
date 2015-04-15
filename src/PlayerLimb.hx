@@ -54,9 +54,9 @@ class PlayerLimb extends GameSprite
 		return onPlatform();
 	}
 
-	override public function wallCollision(wall : Platform)
+	override public function wallCollision(wall : Rectangle, ?sp : Platform)
 	{
-		if(this.getRect().intersects(wall.getRect()))
+		if(this.getRect().intersects(wall))
 		{
 			if(vel.y > 0 && lastPos.y <= wall.y - charHeight)
 			{

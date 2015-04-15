@@ -73,18 +73,6 @@ class Level extends Sprite
 		{
 			sprite.gravity();
 			if(!sprite.visible) continue;
-			if(!sprite.onPlatform())
-			{
-				for(platform in level.platforms)
-				{
-					if(sprite.platformCollision(platform))
-						break;
-				}
-			}
-			for(wall in level.walls)
-			{	sprite.wallCollision(wall);}
-			for(l in level.lava)
-			{	sprite.lavaCollision(l);}
 			try
 			{
 				var p1 = cast(sprite, Player);
@@ -102,6 +90,18 @@ class Level extends Sprite
 				}
 			}
 			catch(d:Dynamic)continue;
+			if(!sprite.onPlatform())
+			{
+				for(platform in level.platforms)
+				{
+					if(sprite.platformCollision(platform))
+						break;
+				}
+			}
+			for(wall in level.walls)
+			{	sprite.wallCollision(wall.getRect(),wall);}
+			for(l in level.lava)
+			{	sprite.lavaCollision(l);}
 		}
 
 		//camera movement

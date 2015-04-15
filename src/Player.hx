@@ -18,7 +18,6 @@ class Player extends GameSprite
 
 	private var curDir : DIRECTION;//direction moving
 	private var dirHeld : DIRECTION;//stick/button held
-	private var plyCol : DIRECTION;//direction colliding with another player
 
 	private var controller : Controller;
 	private var downHeld : Bool;
@@ -58,7 +57,7 @@ class Player extends GameSprite
 	{
 		super();
 
-		curDir = plyCol = dirHeld = NONE;
+		curDir = dirHeld = NONE;
 		stunLength = ivLength = 0;
 		controller = p.getCtrls();
 		jumpHeld = attHeld = downHeld = dead = attacking = false;
@@ -230,9 +229,9 @@ class Player extends GameSprite
 		else if(e.keyCode == controller.lAtt || e.keyCode == controller.hAtt) attHeld = false;
 	}
 
-	override public function wallCollision(wall : Platform)
+	override public function wallCollision(wall : Rectangle, ?sp : Platform)
 	{
-		if(this.getRect().intersects(wall.getRect()))
+		if(this.getRect().intersects(wall))
 		{
 			if(!onPlatform() && vel.y > 0 && lastPos.y <= wall.y - charHeight)
 			{
@@ -240,7 +239,7 @@ class Player extends GameSprite
 				trace("Top Collision!", x, y , wall.x, wall.y);*/
 				y = wall.y - charHeight;
 				vel.y = 0;
-				platOn = wall;
+				if(sp != null) platOn = sp;
 			}
 			else if(vel.x >= 0 && lastPos.x <= wall.x - charWidth)
 			{
@@ -365,45 +364,7 @@ class Player extends GameSprite
 
 	public function playerCollision(attacker : Player) : Bool
 	{
-		if(this.getRect().intersects(attacker.getRect()))
-		{
-			if(vel.x > 0 && x <= attacker.x)
-			{
-				if(isStunned())
-				{
-					if(magnitude() <= GameSprite.HIGH_BOUNCE_BOUND) vel.x *= -1;
-					else makeLimbs();
-				}
-				else if(this.plyCol == NONE && attacker.plyCol != LEFT)
-				{
-					vel.x = 0;
-					plyCol = RIGHT;
-					if(attacker.vel.x < 0)
-					{
-						attacker.plyCol = LEFT;
-						attacker.vel.x = 0;
-					}
-				}
-			}
-			else if(vel.x < 0 && x >= attacker.x + charWidth/2)
-			{
-				if(isStunned())
-				{
-					if(magnitude() <= GameSprite.HIGH_BOUNCE_BOUND) vel.x *= -1;
-					else makeLimbs();
-				}
-				else if(this.plyCol == NONE && attacker.plyCol != RIGHT)
-				{
-					vel.x = 0;
-					plyCol = LEFT;
-					if(attacker.vel.x > 0)
-					{
-						attacker.plyCol = RIGHT;
-						attacker.vel.x = 0;
-					}
-				}
-			}
-		}
+		if(attacker.vel.x == 0) wallCollision(attacker.getRect());
 		return attackCollision(attacker);
 	}
 
@@ -580,7 +541,7 @@ class Player extends GameSprite
 				case LEFT:
 					if(downHeld) noMovement();
 					else if(vel.x < -speed*2) vel.x *= 0.8;
-					else if(plyCol != LEFT)
+					else
 					{
 						vel.x = -speed;
 						if(onPlatform() && !image.is(WALK))
@@ -589,7 +550,7 @@ class Player extends GameSprite
 				case RIGHT:
 					if(downHeld) noMovement();
 					else if(vel.x > speed*2) vel.x *= 0.8;
-					else if(plyCol != RIGHT)
+					else
 					{
 						vel.x = speed;
 						if(onPlatform() && !image.is(WALK))
@@ -601,7 +562,6 @@ class Player extends GameSprite
 			setDir();
 			if(!onPlatform() && !image.is(FALL) && vel.y > 0)
 			image.setAnimation(FALL);
-			plyCol = NONE;
 		}
 
 		super.move();
