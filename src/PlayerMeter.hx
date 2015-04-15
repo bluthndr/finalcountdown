@@ -18,10 +18,12 @@ class PlayerMeter extends Sprite
 		q.x = q.y = 10;
 		addChild(q);
 
-		output = new GameText(100, 50, Std.string(damage)+"%");
+		output = new GameText(100, 50, Std.string(Math.floor(damage))+"%");
 		output.vAlign = VAlign.CENTER;
 		output.hAlign = HAlign.CENTER;
 		addChild(output);
+
+		alpha = 0.5;
 
 		x = Startup.stageWidth(0.25*i) + Startup.stageWidth(0.05);
 		y = Startup.stageHeight(0.9);
@@ -50,7 +52,7 @@ class PlayerMeter extends Sprite
 
 	private function updateText()
 	{
-		output.text = Std.string(damage) + "%";
+		output.text = Std.string(Math.floor(damage)) + "%";
 		var gb : UInt = cast(255 - damage * 255 / MAX_DAMAGE, UInt);
 		output.color = Color.rgb(255,gb,gb);
 	}

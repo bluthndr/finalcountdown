@@ -145,4 +145,9 @@ class GameSprite extends Sprite implements Collidable
 
 	public function getRect() : Rectangle
 	{	return curRect.union(lastRect);}
+
+	public function getLocalRect() : Rectangle
+	{
+		return new Rectangle(x, y, width, height);
+	}
 }

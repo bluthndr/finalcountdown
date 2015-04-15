@@ -3,28 +3,33 @@ import flash.geom.Rectangle;
 
 class Platform extends Sprite implements Collidable
 {
-	private var quad : Quad;
+	private var rect : Rectangle;
+	private var color : UInt;
 	public function new(w : Float = 100, h : Float = 100, c: UInt = 0x777777)
 	{
 		super();
-		quad = new Quad(w,h,c);
-		addChild(quad);
+		rect = new Rectangle(x,y,w,h);
+		color = c;
+		addChild(new Quad(w,h,c));
 		name = "Platform";
 	}
 
 	public function clone() : Platform
 	{
-		var rval = new Platform(quad.width, quad.height, quad.color);
+		var rval = new Platform(rect.width, rect.height, color);
 		rval.x = x; rval.y = y;
 		return rval;
 	}
 
 	public function getRect() : Rectangle
-	{	return new Rectangle(x,y, quad.width, quad.height);}
+	{
+		rect.x = x; rect.y = y;
+		return rect;
+	}
 
 	public function toString() : String
 	{
 		return Std.string(new flash.geom.Point(x,y)) + " ("
-		+ Std.string(quad.width) + "," + Std.string(quad.height) + ")";
+		+ Std.string(rect.width) + "," + Std.string(rect.height) + ")";
 	}
 }

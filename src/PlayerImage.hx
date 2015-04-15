@@ -14,6 +14,14 @@ enum Animation
 	//punches
 	HGP;
 	LGP;
+
+	//kicks
+	HGK;
+	LGK;
+
+	//eyes
+	LGE;
+	HGE;
 }
 
 class PlayerImage extends Sprite
@@ -119,11 +127,23 @@ class PlayerImage extends Sprite
 				//trace("Set stun animation");
 				setAnim(PlayerAnimations.stunAnim);
 			case LGP:
-				//trace("set punch1 animation");
+				//trace("set light ground punch animation");
 				setAnim(PlayerAnimations.lgPunchAnim[0]);
 			case HGP:
-				//trace("set punch2 animation");
+				//trace("set light ground punch animation");
 				setAnim(PlayerAnimations.hgPunchAnim[0]);
+			case LGK:
+				//trace("set light ground kick animation");
+				setAnim(PlayerAnimations.lgKickAnim[0]);
+			case HGK:
+				//trace("set heavy ground kick animation");
+				setAnim(PlayerAnimations.hgKickAnim[0]);
+			case LGE:
+				//trace("set light ground eye animation");
+				setAnim(PlayerAnimations.lgEyeAnim[0]);
+			case HGE:
+				//trace("set heavy ground eye animation");
+				setAnim(PlayerAnimations.hgEyeAnim[0]);
 			default:
 				//trace("Set default animation");
 		}
@@ -161,8 +181,20 @@ class PlayerImage extends Sprite
 				if(++curFrame >= cast(PlayerAnimations.lgPunchAnim.length, UInt)) setAnimation(HGP);
 				else setAnim(PlayerAnimations.lgPunchAnim[curFrame]);
 			case HGP:
-				if(++curFrame >= cast(PlayerAnimations.hgPunchAnim.length, UInt)) setAnimation(STAND);
+				if(++curFrame >= cast(PlayerAnimations.hgPunchAnim.length, UInt)) setAnimation(LGK);
 				else setAnim(PlayerAnimations.hgPunchAnim[curFrame]);
+			case LGK:
+				if(++curFrame >= cast(PlayerAnimations.lgKickAnim.length, UInt)) setAnimation(HGK);
+				else setAnim(PlayerAnimations.lgKickAnim[curFrame]);
+			case HGK:
+				if(++curFrame >= cast(PlayerAnimations.hgKickAnim.length, UInt)) setAnimation(LGE);
+				else setAnim(PlayerAnimations.hgKickAnim[curFrame]);
+			case LGE:
+				if(++curFrame >= cast(PlayerAnimations.lgEyeAnim.length, UInt)) setAnimation(HGE);
+				else setAnim(PlayerAnimations.lgEyeAnim[curFrame]);
+			case HGE:
+				if(++curFrame >= cast(PlayerAnimations.hgEyeAnim.length, UInt)) setAnimation(STAND);
+				else setAnim(PlayerAnimations.hgEyeAnim[curFrame]);
 			default:
 				setAnimation(STAND);
 		}
@@ -221,6 +253,67 @@ class PlayerImage extends Sprite
 						else curFrame = 0;
 					}
 				}
+			case LGK:
+				if(frameCount % 3 == 0)
+				{
+					if(++curFrame < cast(PlayerAnimations.lgKickAnim.length, UInt))
+						setAnim(PlayerAnimations.lgKickAnim[curFrame % PlayerAnimations.lgKickAnim.length]);
+					else
+					{
+						//trace("Dispatch event...");
+						parent.dispatchEventWith(Player.END_ATTACK);
+						if(!hasEventListener(Event.ENTER_FRAME)) setAnimation(STAND);
+						else curFrame = 0;
+					}
+				}
+			case HGK:
+				if(frameCount % 3 == 0)
+				{
+					if(++curFrame < cast(PlayerAnimations.hgKickAnim.length, UInt))
+						setAnim(PlayerAnimations.hgKickAnim[curFrame % PlayerAnimations.hgKickAnim.length]);
+					else
+					{
+						//trace("Dispatch event...");
+						parent.dispatchEventWith(Player.END_ATTACK);
+						if(!hasEventListener(Event.ENTER_FRAME)) setAnimation(STAND);
+						else curFrame = 0;
+					}
+				}
+			case LGE:
+				if(frameCount % 2 == 0)
+				{
+					if(++curFrame < cast(PlayerAnimations.lgEyeAnim.length, UInt))
+						setAnim(PlayerAnimations.lgEyeAnim[curFrame % PlayerAnimations.lgEyeAnim.length]);
+					else
+					{
+						//trace("Dispatch event...");
+						parent.dispatchEventWith(Player.END_ATTACK);
+						if(!hasEventListener(Event.ENTER_FRAME)) setAnimation(STAND);
+						else curFrame = 0;
+					}
+				}
+			case HGE:
+				if(frameCount % 2 == 0)
+				{
+					if(curFrame == 45) curFrame = 9;
+					else if(curFrame == 8) curFrame = 30;
+					else if(curFrame >= 30)
+					{
+						++curFrame;
+						//rotate eyes
+						images[0].rotation += deg2rad(67.5);
+						images[4].rotation += deg2rad(67.5);
+					}
+					else if(++curFrame < cast(PlayerAnimations.hgEyeAnim.length, UInt))
+						setAnim(PlayerAnimations.hgEyeAnim[curFrame % PlayerAnimations.hgEyeAnim.length]);
+					else
+					{
+						//trace("Dispatch event...");
+						parent.dispatchEventWith(Player.END_ATTACK);
+						if(!hasEventListener(Event.ENTER_FRAME)) setAnimation(STAND);
+						else curFrame = 0;
+					}
+				}
 			case STUN:
 				images[0].rotation += deg2rad(30);
 				images[4].rotation += deg2rad(30);
@@ -247,6 +340,31 @@ class PlayerImage extends Sprite
 				{
 					[{area : circles[2], type : HG_PUNCH},
 					{area : circles[6], type : HG_PUNCH}];
+				}
+				else [];
+			case LGK:
+				if(curFrame >= 3)
+					[{area : circles[5], type : LG_KICK}];
+				else [];
+			case HGK:
+				if(curFrame >= 5 && curFrame <=8)
+				{
+					[{area : circles[1], type : HG_KICK},
+					{area : circles[5], type : HG_KICK}];
+				}
+				else [];
+			case LGE:
+				if(curFrame >= 3 && curFrame <= 5)
+				{
+					[{area : circles[0], type : LG_EYE},
+					{area : circles[4], type : LG_EYE}];
+				}
+				else [];
+			case HGE:
+				if((curFrame >= 6 && curFrame <= 7) || curFrame >= 30)
+				{
+					[{area : circles[0], type : HG_EYE},
+					{area : circles[4], type : HG_EYE}];
 				}
 				else [];
 			default: [];

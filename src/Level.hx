@@ -6,6 +6,7 @@ import flash.geom.*;
 class Level extends Sprite
 {
 	private var sprites : Array<GameSprite>;
+	private var meters : Array<PlayerMeter>;
 	private var level : LevelGeom;
 	private var spawnPoints : Array<Point>;
 	private var camera : Camera;
@@ -32,6 +33,7 @@ class Level extends Sprite
 
 		showFPS = false;
 		frameCount = 0; timePassed = 0;
+		meters = new Array();
 	}
 
 	private function addHandler(e:Event)
@@ -104,6 +106,24 @@ class Level extends Sprite
 
 		//camera movement
 		moveCamera();
+
+		//make sure meters aren't in the way of players
+		for(meter in meters)
+		{
+			var changed = false;
+			var point = globalToLocal(new Point(meter.x,meter.y));
+			var mRect = new Rectangle(point.x, point.y, meter.width, meter.height);
+			for(sprite in sprites)
+			{
+				if(Std.is(sprite, Player) && sprite.getLocalRect().intersects(mRect))
+				{
+					meter.alpha = 0.5;
+					changed = true;
+					break;
+				}
+			}
+			if(!changed) meter.alpha = 1.0;
+		}
 	}
 
 	private function moveCamera()
@@ -182,6 +202,9 @@ class Level extends Sprite
 		}
 		throw "Player isn't in the level...";
 	}
+
+	public function addMeter(meter : PlayerMeter)
+	{	meters.push(meter);}
 
 	public function addLimbs(limbs : Array<PlayerLimb>)
 	{

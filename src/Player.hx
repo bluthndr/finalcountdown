@@ -15,10 +15,13 @@ class Player extends GameSprite
 {
 	private var image : PlayerImage;
 	private var bound : Quad;
-	private var curDir : DIRECTION;
-	private var lastDir : DIRECTION;
-	private var plyCol : DIRECTION;
+
+	private var curDir : DIRECTION;//direction moving
+	private var dirHeld : DIRECTION;//stick/button held
+	private var plyCol : DIRECTION;//direction colliding with another player
+
 	private var controller : Controller;
+	private var downHeld : Bool;
 	private var jumpHeld : Bool;
 	private var attHeld : Bool;
 	private var color : UInt;
@@ -39,19 +42,26 @@ class Player extends GameSprite
 	public static inline var END_ATTACK = "EndAttack";
 
 	public static var lgPunch : AttackProperties =
-	{knockback : new Point(0.75,-0.01), damage : 2, stun : 90};
+	{knockback : new Point(0.75,-0.01), damage : 2.5, stun : 90};
 	public static var hgPunch : AttackProperties =
 	{knockback : new Point(1.5, -0.05), damage : 5, stun : 240};
+	public static var lgKick : AttackProperties =
+	{knockback : new Point(0.5, -0.1), damage : 3, stun : 200};
+	public static var hgKick : AttackProperties =
+	{knockback : new Point(0.75, -0.5), damage : 6, stun : 200};
+	public static var lgEye : AttackProperties =
+	{knockback : new Point(0.0, -0.65), damage : 2, stun : 120};
+	public static var hgEye : AttackProperties =
+	{knockback : new Point(0.0, -1.0), damage : 7.25, stun : 300};
 
 	public function new(p : PlayerPanel, i : UInt = 0)
 	{
 		super();
 
-		curDir = plyCol = NONE;
-		lastDir = RIGHT;
+		curDir = plyCol = dirHeld = NONE;
 		stunLength = ivLength = 0;
 		controller = p.getCtrls();
-		jumpHeld = attHeld = dead = attacking = false;
+		jumpHeld = attHeld = downHeld = dead = attacking = false;
 		charWidth = WIDTH;
 		charHeight = HEIGHT;
 		color = p.getColor();
@@ -100,6 +110,7 @@ class Player extends GameSprite
 		curRect = new Rectangle(x,y,WIDTH,HEIGHT);
 		lastRect = curRect.clone();
 		lastPos.x = x; lastPos.y = y;
+		cast(parent, Level).addMeter(meter);
 		Game.game.addChild(meter);
 	}
 
@@ -111,22 +122,28 @@ class Player extends GameSprite
 			{
 				switch(e.value)
 				{
-					case 1: curDir = LEFT;
-					case 0: if(curDir == LEFT) curDir = NONE;
+					case 1: dirHeld = LEFT;
+					case 0: if(dirHeld == LEFT) dirHeld = NONE;
 				}
 			}
 			else if(e.control == controller.right)
 			{
 				switch(e.value)
 				{
-					case 1: curDir = RIGHT;
-					case 0: if(curDir == RIGHT) curDir = NONE;
+					case 1: dirHeld = RIGHT;
+					case 0: if(dirHeld == RIGHT) dirHeld = NONE;
 				}
 			}
-			else if(e.control == controller.down)
+			else if(e.control == controller.down && !downHeld)
 			{
-				if(e.value == 1)
-					fastFall();
+				switch(e.value)
+				{
+					case 1:
+						downHeld = true;
+						fastFall();
+					case 0:
+						downHeld = false;
+				}
 			}
 			else if(e.control == controller.up)
 			{
@@ -142,7 +159,11 @@ class Player extends GameSprite
 				{
 					if(!attHeld)
 					{
-						if(onPlatform()) attack(LG_PUNCH);
+						if(onPlatform())
+						{
+							if(downHeld) attack(dirHeld != NONE ? LG_KICK : LG_EYE);
+							else attack(LG_PUNCH);
+						}
 						attHeld = true;
 					}
 				}
@@ -154,7 +175,11 @@ class Player extends GameSprite
 				{
 					if(!attHeld)
 					{
-						if(onPlatform()) attack(HG_PUNCH);
+						if(onPlatform())
+						{
+							if(downHeld) attack(dirHeld != NONE ? HG_KICK : HG_EYE);
+							else attack(HG_PUNCH);
+						}
 						attHeld = true;
 					}
 				}
@@ -165,30 +190,43 @@ class Player extends GameSprite
 
 	private function keyboardInputDown(e:KeyboardEvent)
 	{
-		if(e.keyCode == controller.left) curDir = LEFT;
-		else if(e.keyCode == controller.right)curDir = RIGHT;
+		if(e.keyCode == controller.left) dirHeld = LEFT;
+		else if(e.keyCode == controller.right) dirHeld = RIGHT;
 		else if(e.keyCode == controller.up) jump();
-		else if(e.keyCode == controller.down) fastFall();
+		else if(!downHeld && e.keyCode == controller.down)
+		{
+			downHeld = true;
+			fastFall();
+		}
 		else if(!attHeld)
 		{
 			if(e.keyCode == controller.lAtt)
 			{
 				attHeld = true;
-				if(onPlatform()) attack(LG_PUNCH);
+				if(onPlatform())
+				{
+					if(downHeld) attack(dirHeld != NONE ? LG_KICK : LG_EYE);
+					else attack(LG_PUNCH);
+				}
 			}
 			else if(e.keyCode == controller.hAtt)
 			{
 				attHeld = true;
-				if(onPlatform()) attack(HG_PUNCH);
+				if(onPlatform())
+				{
+					if(downHeld) attack(dirHeld != NONE ? HG_KICK : HG_EYE);
+					else attack(HG_PUNCH);
+				}
 			}
 		}
 	}
 
 	private function keyboardInputUp(e:KeyboardEvent)
 	{
-		if(e.keyCode == controller.left){if(curDir == LEFT) curDir = NONE;}
-		else if(e.keyCode == controller.right){if(curDir == RIGHT) curDir = NONE;}
+		if(e.keyCode == controller.left) {if(dirHeld == LEFT) dirHeld = NONE;}
+		else if(e.keyCode == controller.right) {if(dirHeld == RIGHT) dirHeld = NONE;}
 		else if(e.keyCode == controller.up) endJump();
+		else if(e.keyCode == controller.down) downHeld = false;
 		else if(e.keyCode == controller.lAtt || e.keyCode == controller.hAtt) attHeld = false;
 	}
 
@@ -304,14 +342,18 @@ class Player extends GameSprite
 				{
 					case LG_PUNCH: lgPunch;
 					case HG_PUNCH: hgPunch;
+					case LG_KICK: lgKick;
+					case HG_KICK: hgKick;
+					case LG_EYE: lgEye;
+					case HG_EYE: hgEye;
 					default: {damage : 0.0, knockback : new Point(), stun : 0};
 				};
-				if(!isStunned())
-					stunLength = meter.takeDamage(att.damage, att.stun);
+				var stun = meter.takeDamage(att.damage, att.stun);
+				if(!isStunned()) stunLength = stun;
 				vel.x = att.knockback.x * meter.getDamage();
 				if(attacker.image.scaleX < 0) vel.x *= -1;
 				vel.y = att.knockback.y * meter.getDamage();
-				while(magnitude() < 900) {vel.x *= 1.1; vel.y *= 1.1;}
+				//while(magnitude() < 900) {vel.x *= 1.1; vel.y *= 1.1;}
 				image.setAnimation(STUN);
 				endAttack();
 				ivLength = 10;
@@ -325,32 +367,40 @@ class Player extends GameSprite
 	{
 		if(this.getRect().intersects(attacker.getRect()))
 		{
-			if(vel.x >= 0 && lastPos.x <= attacker.x - charWidth)
+			if(vel.x > 0 && x <= attacker.x)
 			{
 				if(isStunned())
 				{
 					if(magnitude() <= GameSprite.HIGH_BOUNCE_BOUND) vel.x *= -1;
 					else makeLimbs();
 				}
-				else if(attacker.plyCol != LEFT)
+				else if(this.plyCol == NONE && attacker.plyCol != LEFT)
 				{
 					vel.x = 0;
-					x = attacker.x - charWidth;
 					plyCol = RIGHT;
+					if(attacker.vel.x < 0)
+					{
+						attacker.plyCol = LEFT;
+						attacker.vel.x = 0;
+					}
 				}
 			}
-			else if(vel.x <= 0 && lastPos.x >= attacker.x + attacker.charWidth)
+			else if(vel.x < 0 && x >= attacker.x + charWidth/2)
 			{
 				if(isStunned())
 				{
 					if(magnitude() <= GameSprite.HIGH_BOUNCE_BOUND) vel.x *= -1;
 					else makeLimbs();
 				}
-				else if(attacker.plyCol != RIGHT)
+				else if(this.plyCol == NONE && attacker.plyCol != RIGHT)
 				{
-					x = attacker.x + attacker.charWidth;
 					vel.x = 0;
 					plyCol = LEFT;
+					if(attacker.vel.x > 0)
+					{
+						attacker.plyCol = RIGHT;
+						attacker.vel.x = 0;
+					}
 				}
 			}
 		}
@@ -410,7 +460,13 @@ class Player extends GameSprite
 	}
 
 	public function kill()
-	{	makeLimbs();}
+	{
+		/*
+			Add functions later that will decreases score
+			or lives depending on the game type
+		*/
+		makeLimbs();
+	}
 
 	private function jump()
 	{
@@ -432,7 +488,7 @@ class Player extends GameSprite
 
 	private function fastFall()
 	{
-		if(!isStunned() && !onPlatform() && (!jumpHeld ||
+		if(!attacking && !isStunned() && !onPlatform() && (!jumpHeld ||
 		vel.y < 0) && vel.y < 15){vel.y = 15;}
 	}
 
@@ -448,6 +504,22 @@ class Player extends GameSprite
 				attacking = true;
 				image.setAnimation(HGP);
 				vel.x = vel.y = 0;
+			case LG_KICK:
+				attacking = true;
+				image.setAnimation(LGK);
+				vel.y = vel.y = 0;
+			case HG_KICK:
+				attacking = true;
+				image.setAnimation(HGK);
+				vel.y = vel.y = 0;
+			case LG_EYE:
+				attacking = true;
+				image.setAnimation(LGE);
+				vel.y = vel.y = 0;
+			case HG_EYE:
+				attacking = true;
+				image.setAnimation(HGE);
+				vel.y = vel.y = 0;
 			default:
 		}
 	}
@@ -467,20 +539,17 @@ class Player extends GameSprite
 	public function getColor() : UInt
 	{	return color;}
 
-	private function setDir(f: Bool)
+	private function setDir()
 	{
-		if(lastDir != curDir)
+		if(dirHeld == LEFT)
 		{
-			if(f)
-			{
-				image.scaleX = Math.abs(image.scaleX) * -1;
-				image.x += WIDTH;
-			}
-			else
-			{
-				image.scaleX = Math.abs(image.scaleX);
-				image.x -= WIDTH;
-			}
+			image.scaleX = Math.abs(image.scaleX) * -1;
+			image.x = WIDTH;
+		}
+		else if(dirHeld == RIGHT)
+		{
+			image.scaleX = Math.abs(image.scaleX);
+			image.x = 0;
 		}
 	}
 
@@ -497,40 +566,39 @@ class Player extends GameSprite
 		else if(isStunned())
 		{
 			vel.x *= 0.8;
-			--stunLength;
+			if(stunLength == 1)
+			{
+				if(magnitude() < 900)
+					stunLength = 0;
+			}
+			else --stunLength;
 		}
 		else if(!attacking)
 		{
-			switch(curDir)
+			switch(dirHeld)
 			{
 				case LEFT:
-					if(vel.x < -speed*2) vel.x *= 0.8;
+					if(downHeld) noMovement();
+					else if(vel.x < -speed*2) vel.x *= 0.8;
 					else if(plyCol != LEFT)
 					{
 						vel.x = -speed;
-						setDir(true);
 						if(onPlatform() && !image.is(WALK))
 							image.setAnimation(WALK);
 					}
 				case RIGHT:
-					if(vel.x > speed*2) vel.x *= 0.8;
+					if(downHeld) noMovement();
+					else if(vel.x > speed*2) vel.x *= 0.8;
 					else if(plyCol != RIGHT)
 					{
 						vel.x = speed;
-						setDir(false);
 						if(onPlatform() && !image.is(WALK))
 							image.setAnimation(WALK);
 					}
 				default:
-					if(Math.abs(vel.x) > speed*2) vel.x *= 0.8;
-					else
-					{
-						vel.x = 0;
-						if(onPlatform() && !image.is(STAND))
-							image.setAnimation(STAND);
-					}
+					noMovement();
 			}
-			if(curDir != NONE) lastDir = curDir;
+			setDir();
 			if(!onPlatform() && !image.is(FALL) && vel.y > 0)
 			image.setAnimation(FALL);
 			plyCol = NONE;
@@ -539,6 +607,17 @@ class Player extends GameSprite
 		super.move();
 		image.animate();
 		if(ivLength > 0) --ivLength;
+	}
+
+	private function noMovement()
+	{
+		if(Math.abs(vel.x) > speed*2) vel.x *= 0.8;
+		else
+		{
+			vel.x = 0;
+			if(onPlatform() && !image.is(STAND))
+				image.setAnimation(STAND);
+		}
 	}
 
 	public function toString() : String

@@ -8,7 +8,7 @@ class Lava extends Platform
 
 	override public function clone() : Lava
 	{
-		var rval = new Lava(quad.width, quad.height);
+		var rval = new Lava(rect.width, rect.height);
 		rval.x = x; rval.y = y;
 		return rval;
 	}

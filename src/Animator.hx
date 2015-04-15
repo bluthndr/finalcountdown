@@ -1,4 +1,4 @@
-import starling.display.Sprite;
+import starling.display.*;
 import flash.ui.*;
 import starling.events.*;
 import PlayerAttributes;
@@ -50,6 +50,10 @@ class Animator extends Sprite
 		image.scaleX = image.scaleY = 3;
 		x = Startup.stageWidth(0.5) - width/2;
 		y = Startup.stageHeight(0.5) - height/2;
+		var q = new Quad(300,7.5,0);
+		q.x = image.width/2 - q.width/2;
+		q.y = Player.HEIGHT * image.scaleY;
+		addChild(q);
 		addEventListener(KeyboardEvent.KEY_DOWN,
 		function(e:KeyboardEvent)
 		{
