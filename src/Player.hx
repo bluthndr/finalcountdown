@@ -17,6 +17,7 @@ class Player extends GameSprite
 	private var bound : Quad;
 	private var curDir : DIRECTION;
 	private var lastDir : DIRECTION;
+	private var plyCol : DIRECTION;
 	private var controller : Controller;
 	private var jumpHeld : Bool;
 	private var attHeld : Bool;
@@ -46,7 +47,7 @@ class Player extends GameSprite
 	{
 		super();
 
-		curDir = NONE;
+		curDir = plyCol = NONE;
 		lastDir = RIGHT;
 		stunLength = ivLength = 0;
 		controller = p.getCtrls();
@@ -65,8 +66,6 @@ class Player extends GameSprite
 		bound.visible = false;
 		addChild(bound);
 
-		curRect = new Rectangle(x,y,WIDTH,HEIGHT);
-		lastRect = curRect.clone();
 		addEventListener(Event.ADDED_TO_STAGE, addHandler);
 		addEventListener(END_ATTACK, endAttack);
 	}
@@ -98,6 +97,9 @@ class Player extends GameSprite
 			addEventListener(KeyboardEvent.KEY_UP, keyboardInputUp);
 			addEventListener(KeyboardEvent.KEY_DOWN, keyboardInputDown);
 		}
+		curRect = new Rectangle(x,y,WIDTH,HEIGHT);
+		lastRect = curRect.clone();
+		lastPos.x = x; lastPos.y = y;
 		Game.game.addChild(meter);
 	}
 
@@ -289,8 +291,9 @@ class Player extends GameSprite
 		}
 	}
 
-	public function playerCollision(attacker : Player) : Bool
+	private function attackCollision(attacker : Player) : Bool
 	{
+		//attacks
 		if(ivLength > 0) return false;
 		var body = image.getCircle(3);
 		for(attack in attacker.image.getAttacks())
@@ -311,11 +314,47 @@ class Player extends GameSprite
 				while(magnitude() < 900) {vel.x *= 1.1; vel.y *= 1.1;}
 				image.setAnimation(STUN);
 				endAttack();
-				ivLength = 5;
+				ivLength = 10;
 				return true;
 			}
 		}
 		return false;
+	}
+
+	public function playerCollision(attacker : Player) : Bool
+	{
+		if(this.getRect().intersects(attacker.getRect()))
+		{
+			if(vel.x >= 0 && lastPos.x <= attacker.x - charWidth)
+			{
+				if(isStunned())
+				{
+					if(magnitude() <= GameSprite.HIGH_BOUNCE_BOUND) vel.x *= -1;
+					else makeLimbs();
+				}
+				else if(attacker.plyCol != LEFT)
+				{
+					vel.x = 0;
+					x = attacker.x - charWidth;
+					plyCol = RIGHT;
+				}
+			}
+			else if(vel.x <= 0 && lastPos.x >= attacker.x + attacker.charWidth)
+			{
+				if(isStunned())
+				{
+					if(magnitude() <= GameSprite.HIGH_BOUNCE_BOUND) vel.x *= -1;
+					else makeLimbs();
+				}
+				else if(attacker.plyCol != RIGHT)
+				{
+					x = attacker.x + attacker.charWidth;
+					vel.x = 0;
+					plyCol = LEFT;
+				}
+			}
+		}
+		return attackCollision(attacker);
 	}
 
 	private function makeLimbs()
@@ -466,7 +505,7 @@ class Player extends GameSprite
 			{
 				case LEFT:
 					if(vel.x < -speed*2) vel.x *= 0.8;
-					else
+					else if(plyCol != LEFT)
 					{
 						vel.x = -speed;
 						setDir(true);
@@ -475,7 +514,7 @@ class Player extends GameSprite
 					}
 				case RIGHT:
 					if(vel.x > speed*2) vel.x *= 0.8;
-					else
+					else if(plyCol != RIGHT)
 					{
 						vel.x = speed;
 						setDir(false);
@@ -494,6 +533,7 @@ class Player extends GameSprite
 			if(curDir != NONE) lastDir = curDir;
 			if(!onPlatform() && !image.is(FALL) && vel.y > 0)
 			image.setAnimation(FALL);
+			plyCol = NONE;
 		}
 
 		super.move();
