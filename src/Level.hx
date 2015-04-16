@@ -340,21 +340,22 @@ class Camera
 	public function move(center : Point, positions : Array<Point>)
 	{
 		//move camera
-		if(x < center.x - cameraSpeed*2) x += cameraSpeed;
-		else if(x > center.x + cameraSpeed*2) x -= cameraSpeed;
-		if(y < center.y - cameraSpeed*2) y += cameraSpeed;
-		else if(y > center.y + cameraSpeed*2) y -= cameraSpeed;
-
-		var newScale : Float = 1;
-		while(!allOnScreen(positions, newScale) && newScale > 0.01) newScale -= 0.01;
-		if(scale < newScale - 0.05) scale += 0.01;
-		else if(scale > newScale + 0.05) scale -= 0.01;
-		else scale = newScale;
+		if(x < center.x - cameraSpeed*10) x += cameraSpeed;
+		else if(x > center.x + cameraSpeed*10) x -= cameraSpeed;
+		if(y < center.y - cameraSpeed*10) y += cameraSpeed;
+		else if(y > center.y + cameraSpeed*10) y -= cameraSpeed;
 
 		//bound camera
 		if(x < lowBound.x) x = lowBound.x;
 		else if(x > highBound.x) x = highBound.x;
 		if(y < lowBound.y) y = lowBound.y;
 		else if(y > highBound.y) y = highBound.y;
+
+		//find scale
+		var newScale : Float = 1;
+		while(!allOnScreen(positions, newScale) && newScale > 0.01) newScale -= 0.01;
+		if(scale < newScale - 0.05) scale += 0.01;
+		else if(scale > newScale + 0.05) scale -= 0.01;
+		else scale = newScale;
 	}
 }

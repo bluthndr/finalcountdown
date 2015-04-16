@@ -3,6 +3,7 @@ import starling.events.*;
 import flash.ui.*;
 import bitmasq.*;
 import flash.geom.Point;
+import GamePanel;
 
 class Game extends Sprite
 {
@@ -10,131 +11,39 @@ class Game extends Sprite
 	private static inline var credits =
 	"Credits\n------------\nTemitope Alaga\nAdd other names later...";
 
-	private var panels : Array<PlayerPanel>;
-	private var changer : PlayerPanel;
-
 	public static var game : Game;
+	private var titleText : GameText;
+	private var panel : GamePanel;
+
+	public static inline var READY = "ReadyEvent";
+	public static inline var CHANGE_CONTROLS = "ChangeControls";
 
 	public function new()
 	{
 		super();
 		game = this;
-		panels = new Array();
-		for(i in 0...4)
-		{
-			var panel = new PlayerPanel(i);
-			panel.x = Startup.stageWidth(i*0.25);
-			panel.y = Startup.stageHeight(0.25);
-			panels.push(panel);
-		}
-		setMenu();
-		touchable = false;
-	}
-
-	private function addInputListeners()
-	{
-		if(!hasEventListener(KeyboardEvent.KEY_DOWN))
-			addEventListener(KeyboardEvent.KEY_DOWN, keyInput);
-		if(!hasEventListener(GamepadEvent.CHANGE))
-			Gamepad.get().addEventListener(GamepadEvent.CHANGE, gameInput);
-		if(!hasEventListener(PlayerPanel.READY))
-			addEventListener(PlayerPanel.READY, checkReady);
-	}
-
-	private function removeInputListeners()
-	{
-		removeEventListener(KeyboardEvent.KEY_DOWN, keyInput);
-		Gamepad.get().removeEventListener(GamepadEvent.CHANGE, gameInput);
-		removeEventListener(PlayerPanel.READY, checkReady);
-	}
-
-	public function checkReady()
-	{
-		var ready = true;
-		for(p in panels)
-		{
-			if(p.isHuman() && !p.isReady())
-			{
-				ready = false;
-				break;
-			}
-		}
-		if(ready)
-		{
-			removeInputListeners();
-			removeChildren();
-			makeTestLevel();
-		}
+		panel = new GamePanel();
+		addChild(panel);
+		titleText = new GameText(title.length*50,100,title);
+		titleText.x = Startup.stageWidth(0.5) - titleText.width/2;
+		titleText.fontSize = 50; titleText.color = 0;
+		addChild(titleText);
 	}
 
 	public function reset()
 	{
-		for(panel in panels)
-			panel.reset();
-		setMenu();
+		removeChildren();
+		addChild(titleText);
+		panel.reset();
+		addChild(panel);
+		touchable = true;
 	}
 
-	public function setMenu()
+	public function makeTestLevel()
 	{
 		removeChildren();
-		addInputListeners();
-		for(panel in panels) addChild(panel);
-		var t = new GameText(title.length*50,100,title);
-		t.x = Startup.stageWidth(0.5) - t.width/2;
-		t.fontSize = 50; t.color = 0;
-		addChild(t);
-	}
+		touchable = false;
 
-	private function keyInput(e:KeyboardEvent)
-	{
-		if(e.keyCode == Keyboard.F1)
-		{
-			removeInputListeners();
-			removeChildren();
-			addChild(new Animator());
-		}
-		else if(changer == null)
-		{
-			for(panel in panels)
-			{ panel.checkKeyInput(e.keyCode);}
-		}
-		else changer.checkKeyInput(e.keyCode);
-	}
-
-	private function gameInput(e:GamepadEvent)
-	{
-		//trace("Gamepad event", e.value, e.deviceIndex);
-		if(e.value == 1)
-		{
-			if(changer == null)
-			{
-				for(panel in panels)
-				{panel.checkPadInput(e);}
-			}
-			else changer.checkPadInput(e);
-		}
-	}
-
-	public function canChange(panel : PlayerPanel) : Bool
-	{
-		for(p in panels)
-		{
-			if(p != panel && p.isHuman()
-			&& p.isChangingCtrls())
-			{
-				return false;
-				break;
-			}
-		}
-		changer = panel;
-		return true;
-	}
-
-	public function stopChange()
-	{	changer = null;}
-
-	private function makeTestLevel()
-	{
 		//lists
 		var lavas = new Array<Lava>();
 		var plats = new Array<Platform>();
@@ -156,22 +65,6 @@ class Game extends Sprite
 		}
 
 		addChild(new Level(levelWidth,levelHeight,
-		positions,loadPlayers(), plats, null, null, false));
-	}
-
-	private function loadPlayers() : Array<GameSprite>
-	{
-		var players = new Array<GameSprite>();
-		var i = 0;
-		for(panel in panels)
-		{
-			if(panel.isHuman())
-			{
-				var player = new Player(panel,i);
-				players.push(player);
-			}
-			++i;
-		}
-		return players;
+		positions, panel.loadPlayers(), plats, null, null, false));
 	}
 }

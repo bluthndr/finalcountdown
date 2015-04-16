@@ -1,7 +1,10 @@
 import starling.display.*;
+import starling.events.*;
+import GameText;
 import bitmasq.*;
 import starling.utils.Color;
 import flash.ui.*;
+import flash.geom.*;
 
 enum PlayerType
 {
@@ -10,61 +13,65 @@ enum PlayerType
 	NONE;
 }
 
-enum PanelState
-{
-	REGULAR;
-	CHANGE_CTRL_TYPE;
-	CHANGE_CTRL;
-}
-
 class PlayerPanel extends Sprite
 {
 	private var quad : Quad;
 	private var ctrl : Controller;
 	private var ready : Bool;
-	private var state : PanelState;
 	private var type : PlayerType;
-	private var r : Int;
-	private var g : Int;
-	private var b : Int;
-	private var curChoice : UInt;
-	private var texts : Array<PanelText>;
+	private var colors : Array<Int>;
+	private var buttons : Array<PanelButton>;
+	public var cursor : Cursor;
+	private var playerID : UInt;
 
-	private static inline var choiceNum = 6;
-	public static inline var READY = "ReadyEvent";
+	private static inline var colVal = 25;
 
 	public function new(id : UInt)
 	{
 		super();
-		state = REGULAR;
+		playerID = id;
 		type = id == 0 ? HUMAN : NONE;
 		ready = false;
-		r = Std.random(256);
-		g = Std.random(256);
-		b = Std.random(256);
-		curChoice = 0;
+		colors = new Array();
+		for(i in 0...3) colors.push(Std.random(256));
 
-		quad = new Quad(Startup.stageWidth(0.2), Startup.stageHeight(0.75), Color.rgb(r,g,b));
+		quad = new Quad(Startup.stageWidth(0.2), Startup.stageHeight(0.75), getColor());
 		addChild(quad);
 
-		texts = new Array();
-		for(i in 0...choiceNum)
-		{
-			var t = new PanelText(switch(i)
-			{
-				case 0: "Player Type: " + typeString();
-				case 1: "Red Color: " + Std.string(r);
-				case 2: "Green Color: " + Std.string(g);
-				case 3: "Blue Color: " + Std.string(b);
-				case 4: "Change Controls";
-				default: "Ready: " + (ready ? "Yes" : "No");
-			});
-			t.y = i * 75;
-			texts.push(t);
-			addChild(t);
-		}
-		updateCursor();
+		buttons = new Array();
+		buttons.push(new PanelButton("Player Type: " + typeString(), changeType));
+		buttons.push(new PanelButton("<", decRed));
+		buttons.push(new PanelButton(">", incRed));
+		buttons.push(new PanelButton("<", decGreen));
+		buttons.push(new PanelButton(">", incGreen));
+		buttons.push(new PanelButton("<", decBlue));
+		buttons.push(new PanelButton(">", incBlue));
+		buttons.push(new PanelButton("Change Controls", null, changeControls));
+		buttons.push(new PanelButton("Ready: " + (ready ? "Yes" : "No"), triggerReady));
 
+		var l = buttons.length;
+		for(i in 0...l)
+		{
+			switch(i)
+			{
+				case 0:
+					addChild(buttons[i]);
+				case 1,3,5:
+					buttons[i].width /= 2;
+					buttons[i].y = buttons[i-1].y + buttons[i-1].height*1.75;
+					addChild(buttons[i]);
+				case 2,4,6:
+					buttons[i].width /= 2;
+					buttons[i].x = buttons[i].width;
+					buttons[i].y = buttons[i-1].y;
+					addChild(buttons[i]);
+				default:
+					buttons[i].y = buttons[i-1].y + buttons[i-1].height*1.75;
+					addChild(buttons[i]);
+			}
+		}
+
+		cursor = new Cursor(getColor());
 		ctrl = switch(id)
 		{
 			case 1:
@@ -106,7 +113,52 @@ class PlayerPanel extends Sprite
 		};
 	}
 
-	public function typeString() : String
+	private inline function decRed()
+	{
+		colors[0] -= colVal;
+		if(colors[0] < 0) colors[0] = 0;
+		setColor();
+	}
+
+	private inline function incRed()
+	{
+		colors[0] += colVal;
+		if(colors[0] > 255) colors[0] = 255;
+		setColor();
+	}
+
+	private inline function decGreen()
+	{
+		colors[1] -= colVal;
+		if(colors[1] < 0) colors[1] = 0;
+		setColor();
+	}
+
+	private inline function incGreen()
+	{
+		colors[1] += colVal;
+		if(colors[1] > 255) colors[1] = 255;
+		setColor();
+	}
+
+	private inline function decBlue()
+	{
+		colors[2] -= colVal;
+		if(colors[2] < 0) colors[2] = 0;
+		setColor();
+	}
+
+	private inline function incBlue()
+	{
+		colors[2] += colVal;
+		if(colors[2] > 255) colors[2] = 255;
+		setColor();
+	}
+
+	public inline function getColor() : UInt
+	{	return Color.rgb(colors[0], colors[1], colors[2]);}
+
+	public inline function typeString() : String
 	{
 		return switch(type)
 		{
@@ -116,301 +168,185 @@ class PlayerPanel extends Sprite
 		}
 	}
 
-	public function isHuman() : Bool
+	public inline function isHuman() : Bool
 	{	return type == HUMAN;}
 
-	public function isChangingCtrls() : Bool
-	{	return state != REGULAR;}
-
-	public function getCtrls() : Controller
+	public inline function getCtrls() : Controller
 	{	return ctrl;}
 
-	public function getColor() : UInt
-	{	return quad.color;}
-
 	public function reset()
-	{	ready = false; updateText();}
+	{	ready = false; cursor.reset(); updateText();}
 
-	public function isReady() : Bool
+	public inline function isReady() : Bool
 	{	return ready;}
 
-	private function setColor()
-	{	quad.color = Color.rgb(r,g,b);}
+	private inline function setColor()
+	{	cursor.color = quad.color = getColor();}
 
-	/*Choices
-	Regular State			Control Change State
-	----------------		----------------
-	0->playerType			0->left
-	1->r					1->right
-	2->g					2->down
-	3->b					3->up
-	4->Change Controls		4->lAtt
-	5->Ready				5->hAtt
-	*/
 	public function checkKeyInput(val : Float)
 	{
-		//trace("Execute: keyInput with " + val);
-		switch(state)
+		if(!ctrl.gamepad)
 		{
-			case REGULAR:
-			if(!ctrl.gamepad)
-			{
-				if(val == ctrl.left) leftAction();
-				else if(val == ctrl.right) rightAction();
-				else if(val == ctrl.up) upAction();
-				else if(val == ctrl.down) downAction();
-				else if(val == ctrl.lAtt || val == ctrl.hAtt) confirmAction();
-			}
-			case CHANGE_CTRL_TYPE:
-				ctrl.gamepad = false;
-				changeState(CHANGE_CTRL);
-			case CHANGE_CTRL:
-			{
-				if(!ctrl.gamepad)
-				{
-					switch(curChoice++ % choiceNum)
-					{
-						case 0: ctrl.left = val;
-						case 1: ctrl.right = val;
-						case 2: ctrl.down = val;
-						case 3: ctrl.up = val;
-						case 4: ctrl.lAtt = val;
-						default:
-							ctrl.hAtt = val;
-							changeState(REGULAR);
-					}
-					updateText();
-				}
-			}
+			if(val == ctrl.left) cursor.horiDir = NEGATIVE;
+			else if(val == ctrl.right) cursor.horiDir = POSITIVE;
+			else if(val == ctrl.up) cursor.vertDir = NEGATIVE;
+			else if(val == ctrl.down) cursor.vertDir = POSITIVE;
+			else if(val == ctrl.lAtt || val == ctrl.hAtt) checkPress();
+		}
+	}
+
+	public function checkKeyOutput(val : Float)
+	{
+		if(!ctrl.gamepad)
+		{
+			if(val == ctrl.left || val == ctrl.right)
+				cursor.horiDir = NO_DIR;
+			else if(val == ctrl.up || val == ctrl.down)
+				cursor.vertDir = NO_DIR;
 		}
 	}
 
 	public function checkPadInput(e:GamepadEvent)
 	{
-		//trace("Execute: padInput with " + e.deviceIndex, e.control);
-		switch(state)
+		if(ctrl.gamepad && e.deviceIndex == ctrl.padID)
 		{
-			case REGULAR:
-			if(ctrl.gamepad &&
-			e.deviceIndex == ctrl.padID)
+			if(e.value == 0)
 			{
-				if(e.control == ctrl.left) leftAction();
-				else if(e.control == ctrl.right) rightAction();
-				else if(e.control == Gamepad.D_UP) upAction();
-				else if(e.control == ctrl.down) downAction();
+				if(e.control == ctrl.left || e.control == ctrl.right)
+					cursor.horiDir = NO_DIR;
+				else if(e.control == Gamepad.D_UP || e.control == ctrl.down)
+					cursor.vertDir = NO_DIR;
+			}
+			else if(e.value == 1)
+			{
+				if(e.control == ctrl.left) cursor.horiDir = NEGATIVE;
+				else if(e.control == ctrl.right) cursor.horiDir = POSITIVE;
+				else if(e.control == Gamepad.D_UP) cursor.vertDir = NEGATIVE;
+				else if(e.control == ctrl.down) cursor.vertDir = POSITIVE;
 				else if(e.control == ctrl.up || e.control == ctrl.lAtt ||
-				e.control == ctrl.hAtt)	{confirmAction();}
-			}
-			case CHANGE_CTRL_TYPE:
-				ctrl.gamepad = true;
-				ctrl.padID = e.deviceIndex;
-				ctrl.left = Gamepad.D_LEFT;
-				ctrl.right = Gamepad.D_RIGHT;
-				ctrl.down = Gamepad.D_DOWN;
-				changeState(CHANGE_CTRL);
-			case CHANGE_CTRL:
-			{
-				if(ctrl.gamepad)
-				{
-					switch(curChoice++ % choiceNum)
-					{
-						/*case 0: ctrl.left = e.control;
-						case 1: ctrl.right = e.control;
-						case 2: ctrl.down = e.control;*/
-						case 3: ctrl.up = e.control;
-						case 4: ctrl.lAtt = e.control;
-						default:
-							ctrl.hAtt = e.control;
-							changeState(REGULAR);
-					}
-					updateText();
-				}
+				e.control == ctrl.hAtt)	{checkPress();}
 			}
 		}
 	}
 
-	private function leftAction()
+	private function checkPress()
+	{	cast(parent, GamePanel).trigger(cursor);}
+
+	public function trigger(cur : Cursor)
 	{
-		switch(curChoice % choiceNum)
+		var point = globalToLocal(new Point(cur.x, cur.y));
+		var rect = new Rectangle(point.x, point.y, cur.width, cur.height);
+		for(button in buttons)
 		{
-			case 0:
-			type = switch(type)
+			if(rect.intersects(button.bounds))
 			{
-				case HUMAN: NONE;
-				case NONE: CPU;
-				case CPU: HUMAN;
-			};
-			ready = (type == CPU);
-			case 1:
-				r -= 5;
-				if(r < 0) r = 0;
-				setColor();
-			case 2:
-				g -= 5;
-				if(g < 0) g = 0;
-				setColor();
-			case 3:
-				b -= 5;
-				if(b < 0) b = 0;
-				setColor();
-			case 4:
-				changeState(CHANGE_CTRL_TYPE);
-		}
-		updateText();
-	}
-
-	private function rightAction()
-	{
-		switch(curChoice % choiceNum)
-		{
-			case 0:
-			type = switch(type)
-			{
-				case HUMAN: CPU;
-				case NONE: HUMAN;
-				case CPU: NONE;
-			};
-			ready = (type == CPU);
-			case 1:
-				r += 5;
-				if(r > 255) r = 255;
-				setColor();
-			case 2:
-				g += 5;
-				if(g > 255) g = 255;
-				setColor();
-			case 3:
-				b += 5;
-				if(b > 255) b = 255;
-				setColor();
-			case 4:
-				changeState(CHANGE_CTRL_TYPE);
-		}
-		updateText();
-	}
-
-	private function upAction()
-	{
-		if(curChoice == 0) curChoice = choiceNum-1;
-		else --curChoice;
-		updateCursor();
-	}
-
-	private function downAction()
-	{
-		++curChoice;
-		updateCursor();
-	}
-
-	private function updateCursor()
-	{
-		for(i in 0...texts.length)
-		{
-			if(cast(i, UInt) == curChoice % choiceNum)
-				texts[i].color = 0xff0000;
-			else texts[i].color = 0xffffff;
-		}
-	}
-
-	private function confirmAction()
-	{
-		switch(curChoice % choiceNum)
-		{
-			case 4:
-				changeState(CHANGE_CTRL_TYPE);
-			case 5:
-				if(type != NONE) ready = !ready;
-				cast(parent, Game).checkReady();
-		}
-		updateText();
-	}
-
-	private function changeState(gs : PanelState)
-	{
-		switch(gs)
-		{
-			case REGULAR:
-				curChoice = 0;
-				ready = false;
-				state = REGULAR;
-				cast(parent, Game).stopChange();
-			case CHANGE_CTRL_TYPE:
-				if(cast(parent, Game).canChange(this))
-				{
-					curChoice = 0;
-					ready = false;
-					state = CHANGE_CTRL_TYPE;
-				}
-				updateText();
-			case CHANGE_CTRL:
-				if(cast(parent, Game).canChange(this))
-				{
-					curChoice = ctrl.gamepad ? 3 : 0;
-					ready = false;
-					state = CHANGE_CTRL;
-				}
-				updateText();
-		}
-		updateCursor();
-	}
-
-	private function updateText()
-	{
-		switch(state)
-		{
-			case REGULAR:
-			for(i in 0...choiceNum)
-			{
-				texts[i].text = switch(i)
-				{
-					case 0: "Player Type: " + typeString();
-					case 1: "Red Color: " + Std.string(r);
-					case 2: "Green Color: " + Std.string(g);
-					case 3: "Blue Color: " + Std.string(b);
-					case 4: "Change Controls";
-					default: "Ready: " + (ready ? "Yes" : "No");
-				};
+				try{button.trigger(playerID);}
+				catch(d:Dynamic){button.trigger();}
 			}
-			case CHANGE_CTRL_TYPE:
-			for(i in 0...choiceNum)
-			{
-				texts[i].text = switch(i)
-				{
-					case 0: "Press a button on the device";
-					default: "";
-				};
-			}
-			case CHANGE_CTRL:
-			for(i in 0...choiceNum)
-			{
-				texts[i].text = switch(i)
-				{
-					case 0: "Control Type: " + (ctrl.gamepad ? "Gamepad" : "Keyboard");
-					case 1: "Press a button/key to set the ";
-					case 2: (switch(curChoice % choiceNum)
-					{
-						case 0: "Left";
-						case 1: "Right";
-						case 2: "Down";
-						case 3: "Jump";
-						case 4: "Light Attack";
-						default: "Heavy Attack";
-					}) + " button";
-					default: "";
-				};
-			}
+		}
+	}
+
+	public function updateText()
+	{
+		buttons[0].text = "Player Type: " + typeString();
+		buttons[8].text = "Ready: " + (ready ? "Yes" : "No");
+	}
+
+	private function changeType()
+	{
+		type = switch(type)
+		{
+			case HUMAN: CPU;
+			case CPU: NONE;
+			case NONE: HUMAN;
+		};
+		reset();
+	}
+
+	private function changeControls(id : UInt)
+	{
+		if(type == HUMAN)
+		{
+			parent.dispatchEvent(new ControlChangerEvent(id));
+			parent.removeChild(cursor);
+		}
+	}
+
+	private function triggerReady()
+	{
+		if(type == HUMAN)
+		{
+			ready = !ready;
+			parent.dispatchEventWith(Game.READY);
 		}
 	}
 }
 
-class PanelText extends GameText
+class PanelButton extends GameButton
 {
-	private var quad : Quad;
-	public function new(s : String)
+	public var trigger : Dynamic;
+	public function new(s : String, fn : Void->Void, ?fn2 : UInt->Void)
 	{
-		super(cast(Startup.stageWidth(0.2),Int),50,s);
-		fontSize = 10;
-		quad = new Quad(Startup.stageWidth(0.2),50,0);
-		addChild(quad);
+		super(cast(Startup.stageWidth(0.2),Int),50,s,function()
+		{
+			if(fn != null) fn();
+		});
+		addChildAt(new Quad(Startup.stageWidth(0.2),50,0),0);
+		trigger = fn == null ? fn2 : fn;
+	}
+}
+
+enum CURSOR_DIRECTION
+{
+	POSITIVE;
+	NEGATIVE;
+	NO_DIR;
+}
+
+class Cursor extends Image
+{
+	public var vertDir : CURSOR_DIRECTION;
+	public var horiDir : CURSOR_DIRECTION;
+	public function new(c : UInt)
+	{
+		super(Root.assets.getTexture("fist"));
+		vertDir = horiDir = NO_DIR;
+		color = c;
+		addEventListener(Event.ADDED_TO_STAGE, function()
+		{
+			removeEventListeners(Event.ADDED_TO_STAGE);
+			addEventListener(Event.ENTER_FRAME, update);
+		});
+		scaleX = scaleY = 0.1;
+		alignPivot();
+	}
+
+	public function reset()
+	{	vertDir = horiDir = NO_DIR; rotation = 0;}
+
+	private function update(e:EnterFrameEvent)
+	{
+		var velx = 0; var vely = 0;
+		switch(vertDir)
+		{
+			case NEGATIVE:
+				if(y > 0)vely = -5;
+			case POSITIVE:
+				if(y < Startup.stageHeight()) vely = 5;
+			default:
+		}
+		switch(horiDir)
+		{
+			case NEGATIVE:
+				if(x > 0) velx = -5;
+			case POSITIVE:
+				if(x < Startup.stageWidth()) velx = 5;
+			default:
+		}
+		if(vely != 0 || velx != 0)
+		{
+			y += vely; x += velx;
+			rotation = Math.atan2(vely,velx);
+		}
 	}
 }

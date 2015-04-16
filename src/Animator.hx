@@ -86,7 +86,8 @@ class Animator extends Sprite
 				case Keyboard.F9:
 					showInstructions();
 				case Keyboard.ESCAPE:
-					cast(parent, Game).reset();
+					haxe.Log.clear();
+					Game.game.reset();
 				default:
 					if(moving) move(e);
 					else rotate(e);
