@@ -12,6 +12,7 @@ class Platform extends Sprite implements Collidable
 		color = c;
 		addChild(new Quad(w,h,c));
 		name = "Platform";
+		blendMode = BlendMode.NONE;
 	}
 
 	public function clone() : Platform

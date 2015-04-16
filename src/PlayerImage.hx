@@ -101,6 +101,8 @@ class PlayerImage extends Sprite
 				setAnim(PlayerAnimations.jumpAnim);
 			case STICK:
 				setAnim(PlayerAnimations.stickAnim);
+			case GUARD:
+				setAnim(PlayerAnimations.guardAnim);
 			case FALL:
 				//trace("Set fall animation");
 				setAnim(PlayerAnimations.fallAnim);
@@ -174,6 +176,8 @@ class PlayerImage extends Sprite
 				else setAnim(PlayerAnimations.walkAnim[curFrame]);
 			case STICK:
 				setAnimation(FALL);
+			case GUARD:
+				setAnimation(GUARD);
 			case JUMP:
 				setAnimation(FALL);
 			case FALL:

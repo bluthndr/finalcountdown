@@ -33,6 +33,9 @@ class Player extends GameSprite
 	private var jumpHeight : Float;
 	private var attacking : Bool;
 
+	private var blockLength : Int;
+	private var blockImage : HitCircle;
+
 	public static inline var WIDTH = 48;
 	public static inline var HEIGHT = 64;
 
@@ -41,27 +44,28 @@ class Player extends GameSprite
 
 	public static inline var END_ATTACK = "EndAttack";
 
-	public static var lgPunch : AttackProperties =
-	{knockback : new Point(0.75,-0.01), damage : 2.5, stun : 90};
-	public static var hgPunch : AttackProperties =
-	{knockback : new Point(1.5, -0.05), damage : 5, stun : 240};
-	public static var lgKick : AttackProperties =
-	{knockback : new Point(0.5, -0.1), damage : 3, stun : 200};
-	public static var hgKick : AttackProperties =
-	{knockback : new Point(0.75, -0.5), damage : 6, stun : 200};
-	public static var lgEye : AttackProperties =
-	{knockback : new Point(0.0, -0.65), damage : 2, stun : 120};
-	public static var hgEye : AttackProperties =
-	{knockback : new Point(0.0, -1.0), damage : 7.25, stun : 300};
+	public static var lgPunch : AttackProperties = {damage : 2.5,
+	knockback : new Point(0.75,-0.01), stun : 90, ivFrames : 3};
+	public static var hgPunch : AttackProperties = {damage : 5,
+	knockback : new Point(1.5, -0.05), stun : 240, ivFrames : 10};
+	public static var lgKick : AttackProperties = {damage : 3,
+	knockback : new Point(0.5, -0.1), stun : 200, ivFrames : 5};
+	public static var hgKick : AttackProperties = {damage : 6,
+	knockback : new Point(0.75, -0.5), stun : 200, ivFrames : 10};
+	public static var lgEye : AttackProperties = {damage : 2,
+	knockback : new Point(0.0, -0.65), stun : 120, ivFrames : 10};
+	public static var hgEye : AttackProperties = {damage : 7.25,
+	knockback : new Point(0.0, -1.0),  stun : 300, ivFrames : 30};
 
 	public function new(p : PlayerPanel, i : UInt = 0)
 	{
 		super();
 
 		curDir = dirHeld = wallDir = NONE;
-		stunLength = ivLength = 0;
+		stunLength = ivLength = blockLength = 0;
 		controller = p.getCtrls();
-		jumpHeld = attHeld = downHeld = dead = attacking = false;
+		jumpHeld = attHeld = downHeld =
+		dead = attacking = false;
 		charWidth = WIDTH;
 		charHeight = HEIGHT;
 		color = p.getColor();
@@ -111,6 +115,15 @@ class Player extends GameSprite
 		lastRect = curRect.clone();
 		cast(parent, Level).addMeter(meter);
 		Game.game.addChild(meter);
+
+		blockImage = new HitCircle();
+		blockImage.color = color;
+		blockImage.scaleX = PlayerImage.set(WIDTH);
+		blockImage.scaleY = PlayerImage.set(HEIGHT);
+		blockImage.visible = false;
+		blockImage.alpha = 0.9;
+		blockImage.x = -9;
+		addChild(blockImage);
 	}
 
 	private function gamepadInput(e:GamepadEvent)
@@ -366,7 +379,7 @@ class Player extends GameSprite
 		{
 			if(body.intersects(attack.area))
 			{
-				var att = switch(attack.type)
+				var damage = switch(attack.type)
 				{
 					case LG_PUNCH: lgPunch;
 					case HG_PUNCH: hgPunch;
@@ -374,17 +387,9 @@ class Player extends GameSprite
 					case HG_KICK: hgKick;
 					case LG_EYE: lgEye;
 					case HG_EYE: hgEye;
-					default: {damage : 0.0, knockback : new Point(), stun : 0};
 				};
-				var stun = meter.takeDamage(att.damage, att.stun);
-				if(!isStunned()) stunLength = stun;
-				vel.x = att.knockback.x * meter.getDamage();
-				if(attacker.image.scaleX < 0) vel.x *= -1;
-				vel.y = att.knockback.y * meter.getDamage();
-				//while(magnitude() < 900) {vel.x *= 1.1; vel.y *= 1.1;}
-				image.setAnimation(STUN);
-				endAttack();
-				ivLength = 10;
+				if(isBlocking()) attacker.takeDamage(damage, attacker.image.scaleX > 0);
+				else takeDamage(damage, attacker.image.scaleX < 0);
 				return true;
 			}
 		}
@@ -408,47 +413,15 @@ class Player extends GameSprite
 				}
 				else
 				{
-					if(onPlatform() && attacker.onPlatform())
+					if(x < attacker.x)
 					{
-						var centerX = attacker.x + charWidth/2;
-						if(wallDir != RIGHT && vel.x >= 0 && lastRect.x < centerX)
-						{
-							vel.x = 0;
-							x = attacker.x - charWidth;
-						}
-						else if(wallDir != LEFT && vel.x <= 0 && lastRect.x > centerX)
-						{
-							x = attacker.x + charWidth;
-							vel.x = 0;
-						}
+						--x;
+						++attacker.x;
 					}
 					else
 					{
-						if(wallDir != RIGHT && vel.x >= 0 && lastRect.x < attacker.x - charWidth)
-						{
-							vel.x = 0;
-							x = attacker.x - charWidth;
-						}
-						else if(wallDir != LEFT && vel.x <= 0 && lastRect.x > attacker.x + charWidth)
-						{
-							x = attacker.x + charWidth;
-							vel.x = 0;
-						}
-						else
-						{
-							stunLength = 15; image.setAnimation(STUN);
-							attacker.stunLength = 15; attacker.image.setAnimation(STUN);
-							if(x < attacker.x)
-							{
-								vel.x = -speed;
-								attacker.vel.x = speed;
-							}
-							else
-							{
-								vel.x = speed;
-								attacker.vel.x = -speed;
-							}
-						}
+						++x;
+						--attacker.x;
 					}
 				}
 			}
@@ -532,10 +505,23 @@ class Player extends GameSprite
 			}
 			else if(onPlatform())
 			{
-				vel.y = jumpHeight;
-				platOn = null;
-				jumpHeld = true;
-				image.setAnimation(JUMP);
+				if(downHeld)
+				{
+					//trace("Block?", canBlock());
+					if(canBlock())
+					{
+						blockLength = 72;
+						blockImage.visible = true;
+						image.setAnimation(GUARD);
+					}
+				}
+				else
+				{
+					vel.y = jumpHeight;
+					platOn = null;
+					jumpHeld = true;
+					image.setAnimation(JUMP);
+				}
 			}
 			else if(!image.is(STICK) && wallDir != NONE)
 			{
@@ -605,14 +591,14 @@ class Player extends GameSprite
 
 	public function reset(p : Point)
 	{
-		x = curRect.x = lastRect.x = lastRect.x = p.x;
-		y = curRect.y = lastRect.y = lastRect.y = p.y;
-		vel.x = vel.y = stunLength = 0;
+		x = curRect.x = lastRect.x = p.x;
+		y = curRect.y = lastRect.y = p.y;
+		vel.x = vel.y = stunLength = blockLength = 0;
 		visible = true; meter.reset();
 		dead = attacking = false; platOn = null;
 	}
 
-	public function getColor() : UInt
+	public inline function getColor() : UInt
 	{	return color;}
 
 	private function setDir()
@@ -621,16 +607,26 @@ class Player extends GameSprite
 		{
 			image.scaleX = Math.abs(image.scaleX) * -1;
 			image.x = WIDTH;
+			blockImage.scaleX = Math.abs(blockImage.scaleX)* -1;
+			blockImage.x = WIDTH;
 		}
 		else if(dirHeld == RIGHT)
 		{
 			image.scaleX = Math.abs(image.scaleX);
 			image.x = 0;
+			blockImage.scaleX = Math.abs(blockImage.scaleX);
+			blockImage.x = 0;
 		}
 	}
 
-	public function isStunned() : Bool
+	public inline function isStunned() : Bool
 	{	return stunLength > 0;}
+
+	public inline function canBlock() : Bool
+	{	return blockLength <= 0;}
+
+	public inline function isBlocking() : Bool
+	{	return blockLength > 60;}
 
 	override private function move()
 	{
@@ -656,6 +652,7 @@ class Player extends GameSprite
 				if(vel.y > 0)
 					image.updateWallJump();
 			}
+			else if(isBlocking()) --blockLength;
 			else
 			{
 				switch(dirHeld)
@@ -682,8 +679,22 @@ class Player extends GameSprite
 						noMovement();
 				}
 				setDir();
-				if(!onPlatform() && !image.is(FALL) && vel.y > 0)
-					image.setAnimation(FALL);
+				if(onPlatform())
+				{
+					if(!canBlock())
+					{
+						if(--blockLength == 59)
+						{
+							blockImage.visible = false;
+							image.setAnimation(STAND);
+						}
+					}
+				}
+				else
+				{
+					if(!image.is(FALL) && vel.y > 0)
+						image.setAnimation(FALL);
+				}
 			}
 		}
 
@@ -702,6 +713,18 @@ class Player extends GameSprite
 			if(onPlatform() && !image.is(STAND))
 				image.setAnimation(STAND);
 		}
+	}
+
+	private function takeDamage(att : AttackProperties, flipped : Bool)
+	{
+		var stun = meter.takeDamage(att.damage, att.stun);
+		if(!isStunned()) stunLength = stun;
+		vel.x = att.knockback.x * meter.getDamage();
+		if(flipped) vel.x *= -1;
+		vel.y = att.knockback.y * meter.getDamage();
+		image.setAnimation(STUN);
+		endAttack();
+		if(ivLength <= 0) ivLength = att.ivFrames;
 	}
 
 	public function toString() : String

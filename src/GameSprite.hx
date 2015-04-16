@@ -1,4 +1,4 @@
-import starling.display.Sprite;
+import starling.display.*;
 import flash.geom.Point;
 import flash.geom.Rectangle;
 

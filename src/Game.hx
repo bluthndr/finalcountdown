@@ -28,6 +28,7 @@ class Game extends Sprite
 			panels.push(panel);
 		}
 		setMenu();
+		touchable = false;
 	}
 
 	private function addInputListeners()
