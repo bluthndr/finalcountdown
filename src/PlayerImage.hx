@@ -3,27 +3,6 @@ import flash.filesystem.*;
 import starling.events.*;
 import PlayerAttributes;
 
-enum Animation
-{
-	STAND;
-	JUMP;
-	FALL;
-	WALK;
-	STUN;
-
-	//punches
-	HGP;
-	LGP;
-
-	//kicks
-	HGK;
-	LGK;
-
-	//eyes
-	LGE;
-	HGE;
-}
-
 class PlayerImage extends Sprite
 {
 	private var images : Array<Image>;
@@ -117,9 +96,11 @@ class PlayerImage extends Sprite
 			case WALK:
 				//trace("Set walk animation");
 				setAnim(PlayerAnimations.walkAnim[0]);
-			case JUMP:
+			case JUMP, WALL_JUMP:
 				//trace("Set jump animation");
 				setAnim(PlayerAnimations.jumpAnim);
+			case STICK:
+				setAnim(PlayerAnimations.stickAnim);
 			case FALL:
 				//trace("Set fall animation");
 				setAnim(PlayerAnimations.fallAnim);
@@ -151,6 +132,26 @@ class PlayerImage extends Sprite
 		curAnim = a;
 	}
 
+	public function reattack(a :Animation)
+	{
+		switch(curAnim)
+		{
+			case LGP:
+				if(curFrame >= 5)
+					setAnimation(a);
+			case LGK:
+				if(curFrame >= 3)
+					setAnimation(a);
+			case LGE:
+				if(curFrame >= 8)
+					setAnimation(a);
+			default:
+		}
+	}
+
+	public function updateWallJump()
+	{	setAnim(PlayerAnimations.fallAnim);}
+
 	private function setAnim(a : Array<Anim>)
 	{
 		for(i in 0...images.length)
@@ -169,8 +170,10 @@ class PlayerImage extends Sprite
 				setAnimation(WALK);
 				curFrame = 0;
 			case WALK:
-				if(++curFrame >= cast(PlayerAnimations.walkAnim.length, UInt)) setAnimation(JUMP);
+				if(++curFrame >= cast(PlayerAnimations.walkAnim.length, UInt)) setAnimation(STICK);
 				else setAnim(PlayerAnimations.walkAnim[curFrame]);
+			case STICK:
+				setAnimation(FALL);
 			case JUMP:
 				setAnimation(FALL);
 			case FALL:
@@ -215,7 +218,7 @@ class PlayerImage extends Sprite
 		}
 	}
 
-	public function is(a : Animation) : Bool
+	public inline function is(a : Animation) : Bool
 	{	return curAnim == a;}
 
 	public function animate()
@@ -226,6 +229,9 @@ class PlayerImage extends Sprite
 			case WALK:
 				if(frameCount % 6 == 0)
 					setAnim(PlayerAnimations.walkAnim[++curFrame % PlayerAnimations.walkAnim.length]);
+			case WALL_JUMP:
+				if(++curFrame > 30)
+					setAnimation(FALL);
 			case LGP:
 				//trace("Animate punch");
 				if(frameCount % 2 == 0)

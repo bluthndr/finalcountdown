@@ -22,6 +22,11 @@ class PlayerAnimations
 	{x : 18, y : 29, rot : 0}, {x : 6, y : 6, rot : 0}, {x : 11, y : 53, rot : -0.34906585039886584},
 	{x : 0, y : 41, rot : 1.570796326794899}];
 
+	public static var stickAnim : Array<Anim> =
+	[{x : 30, y : 6, rot : 0}, {x : 5, y : 52, rot : 1.5707963267948966}, {x : 31, y : 45, rot : 1.5707963267948966},
+	{x : 18, y : 29, rot : 0}, {x : 6, y : 6, rot : 0}, {x : -3, y : 46, rot : 1.5707963267948968},
+	{x : -3, y : 18, rot : -1.570796326794897}];
+
 	public static var walkAnim : Array<Array<Anim>> = [
 	//0
 	[{x : 30, y : 6, rot : 0}, {x : 37, y : 47, rot : 0}, {x : 34, y : 30, rot : 0},

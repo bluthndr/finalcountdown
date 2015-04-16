@@ -5,7 +5,6 @@ import flash.geom.Rectangle;
 class GameSprite extends Sprite implements Collidable
 {
 	private var vel : Point;
-	private var lastPos : Point;
 	private var speed : Float;
 	private var weight : Float;
 	private var platOn : Platform;
@@ -29,7 +28,6 @@ class GameSprite extends Sprite implements Collidable
 	{
 		super();
 		vel = new Point();
-		lastPos = new Point();
 		weight = 0.15;
 		speed = 10;
 		platOn = null;
@@ -43,7 +41,7 @@ class GameSprite extends Sprite implements Collidable
 
 	public function platformCollision(plat : Platform) : Bool
 	{
-		if(!onPlatform() && vel.y > 0 && lastPos.y <= plat.y - charHeight
+		if(!onPlatform() && vel.y > 0 && lastRect.y <= plat.y - charHeight
 		&& this.getRect().intersects(plat.getRect()))
 		{
 			y = plat.y - charHeight;
@@ -57,45 +55,55 @@ class GameSprite extends Sprite implements Collidable
 	{
 		if(this.getRect().intersects(wall))
 		{
-			if(!onPlatform() && vel.y > 0 && lastPos.y <= wall.y - charHeight)
+			if(lastRect.y <= wall.y - charHeight)
 			{
-				/*haxe.Log.clear();
-				trace("Top Collision!", x, y , wall.x, wall.y);*/
-				y = wall.y - charHeight;
-				vel.y = 0;
-				if(sp != null) platOn = sp;
-			}
-			else if(vel.x >= 0 && lastPos.x <= wall.x - charWidth)
-			{
-				/*haxe.Log.clear();
-				trace("Left Collision!", x, y , wall.x, wall.y);*/
-				if(GameSprite.LOW_BOUNCE_BOUND <= magnitude()) vel.x *= -1;
-				else
+				if(!onPlatform() && vel.y > 0)
 				{
-					vel.x = 0;
-					x = wall.x - charWidth;
-				}
-			}
-			else if(vel.x <= 0 && lastPos.x >= wall.x + wall.width)
-			{
-				/*haxe.Log.clear();
-				trace("Right Collision!", x, y , wall.x, wall.y);*/
-				if(GameSprite.LOW_BOUNCE_BOUND <= magnitude()) vel.x *= -1;
-				else
-				{
-					x = wall.x + wall.width;
-					vel.x = 0;
-				}
-			}
-			else if(vel.y < 0 && lastPos.y >= wall.y + wall.height)
-			{
-				/*haxe.Log.clear();
-				trace("Bottom Collision!", x, y , wall.x, wall.y);*/
-				if(GameSprite.LOW_BOUNCE_BOUND <= magnitude()) vel.y *= -1;
-				else
-				{
-					y = wall.y + wall.height;
+					/*haxe.Log.clear();
+					trace("Top Collision!", x, y , wall.x, wall.y);*/
+					y = wall.y - charHeight;
 					vel.y = 0;
+					if(sp != null) platOn = sp;
+				}
+			}
+			else if(lastRect.y >= wall.y + wall.height)
+			{
+				if(vel.y < 0)
+				{
+					/*haxe.Log.clear();
+					trace("Bottom Collision!", x, y , wall.x, wall.y);*/
+					if(GameSprite.LOW_BOUNCE_BOUND <= magnitude()) vel.y *= -1;
+					else
+					{
+						y = wall.y + wall.height;
+						vel.y = 0;
+					}
+				}
+			}
+			else
+			{
+				var centerX = wall.x + wall.width/2;
+				if(vel.x >= 0 && lastRect.x < centerX)
+				{
+					/*haxe.Log.clear();
+					trace("Left Collision!", x, y , wall.x, wall.y);*/
+					if(GameSprite.LOW_BOUNCE_BOUND <= magnitude()) vel.x *= -1;
+					else
+					{
+						vel.x = 0;
+						x = wall.x - charWidth;
+					}
+				}
+				else if(vel.x <= 0 && lastRect.x > centerX)
+				{
+					/*haxe.Log.clear();
+					trace("Right Collision!", x, y , wall.x, wall.y);*/
+					if(GameSprite.LOW_BOUNCE_BOUND <= magnitude()) vel.x *= -1;
+					else
+					{
+						x = wall.x + wall.width;
+						vel.x = 0;
+					}
 				}
 			}
 		}
@@ -136,8 +144,7 @@ class GameSprite extends Sprite implements Collidable
 
 	private function move()
 	{
-		lastPos.x = x; lastPos.y = y;
-		lastRect.x = curRect.x; lastRect.y = curRect.y;
+		lastRect.x = x; lastRect.y = y;
 
 		x += vel.x; y += vel.y;
 		curRect.x = x; curRect.y = y;

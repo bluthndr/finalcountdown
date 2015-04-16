@@ -45,11 +45,16 @@ class PlayerLimb extends GameSprite
 
 	override public function platformCollision(plat : Platform) : Bool
 	{
-		if(vel.y > 0 && lastPos.y <= plat.y - charHeight
+		if(!onPlatform() && lastRect.y <= plat.y - charHeight
 		&& this.getRect().intersects(plat.getRect()))
 		{
 			y = plat.y - charHeight;
-			vel.y *= -0.5;
+			if(vel.y > -3 && vel.y < 3)
+			{
+				vel.y = 0;
+				platOn = plat;
+			}
+			else vel.y *= -0.5;
 		}
 		return onPlatform();
 	}
@@ -58,26 +63,42 @@ class PlayerLimb extends GameSprite
 	{
 		if(this.getRect().intersects(wall))
 		{
-			if(vel.y > 0 && lastPos.y <= wall.y - charHeight)
+			if(lastRect.y <= wall.y - charHeight)
 			{
-				y = wall.y - charHeight;
-				vel.y *= -0.5;
+				if(!onPlatform() && vel.y > 0)
+				{
+					y = wall.y - charHeight;
+					if(vel.y > -3 && vel.y < 3)
+					{
+						vel.y = 0;
+						platOn = sp;
+					}
+					else vel.y *= -0.5;
+				}
 			}
-			else if(vel.x >= 0 && lastPos.x <= wall.x - charWidth)
+			else if(lastRect.y >= wall.y + wall.height)
 			{
-				vel.x *= -1;
-				x = wall.x - charWidth;
+				if(vel.y < 0)
+				{
+					vel.y *= -1;
+					y = wall.y + wall.height;
+				}
 			}
-			else if(vel.x <= 0 && lastPos.x >= wall.x + wall.width)
+			else
 			{
-				vel.x *= -1;
-				x = wall.x + wall.width;
+				var centerX = wall.x + wall.width/2;
+				if(vel.x >= 0 && lastRect.x < centerX)
+				{
+					vel.x *= -1;
+					x = wall.x - charWidth;
+				}
+				else if(vel.x <= 0 && lastRect.x > centerX)
+				{
+					vel.x *= -1;
+					x = wall.x + wall.width;
+				}
 			}
-			else if(vel.y < 0 && lastPos.y >= wall.y + wall.height)
-			{
-				vel.y *= -1;
-				y = wall.y + wall.height;
-			}
+
 		}
 	}
 

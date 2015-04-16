@@ -18,6 +18,7 @@ class Player extends GameSprite
 
 	private var curDir : DIRECTION;//direction moving
 	private var dirHeld : DIRECTION;//stick/button held
+	private var wallDir : DIRECTION;//for wall jumps
 
 	private var controller : Controller;
 	private var downHeld : Bool;
@@ -57,7 +58,7 @@ class Player extends GameSprite
 	{
 		super();
 
-		curDir = dirHeld = NONE;
+		curDir = dirHeld = wallDir = NONE;
 		stunLength = ivLength = 0;
 		controller = p.getCtrls();
 		jumpHeld = attHeld = downHeld = dead = attacking = false;
@@ -108,7 +109,6 @@ class Player extends GameSprite
 		}
 		curRect = new Rectangle(x,y,WIDTH,HEIGHT);
 		lastRect = curRect.clone();
-		lastPos.x = x; lastPos.y = y;
 		cast(parent, Level).addMeter(meter);
 		Game.game.addChild(meter);
 	}
@@ -229,61 +229,90 @@ class Player extends GameSprite
 		else if(e.keyCode == controller.lAtt || e.keyCode == controller.hAtt) attHeld = false;
 	}
 
+	override public function platformCollision(plat : Platform) : Bool
+	{
+		if(image.is(STICK) || image.is(WALL_JUMP))
+		{
+			var rval = super.platformCollision(plat);
+			if(rval)
+			{
+				image.setAnimation(STAND);
+				vel.x = 0;
+			}
+			return rval;
+		}
+		else return super.platformCollision(plat);
+	}
+
 	override public function wallCollision(wall : Rectangle, ?sp : Platform)
 	{
 		if(this.getRect().intersects(wall))
 		{
-			if(!onPlatform() && vel.y > 0 && lastPos.y <= wall.y - charHeight)
+			if(lastRect.y <= wall.y - charHeight)
 			{
-				/*haxe.Log.clear();
-				trace("Top Collision!", x, y , wall.x, wall.y);*/
-				y = wall.y - charHeight;
-				vel.y = 0;
-				if(sp != null) platOn = sp;
-			}
-			else if(vel.x >= 0 && lastPos.x <= wall.x - charWidth)
-			{
-				/*haxe.Log.clear();
-				trace("Left Collision!", x, y , wall.x, wall.y);*/
-				if(isStunned())
+				if(!onPlatform() && vel.y > 0)
 				{
-					if(magnitude() <= GameSprite.HIGH_BOUNCE_BOUND) vel.x *= -1;
-					else makeLimbs();
-				}
-				else
-				{
-					vel.x = 0;
-					x = wall.x - charWidth;
-				}
-			}
-			else if(vel.x <= 0 && lastPos.x >= wall.x + wall.width)
-			{
-				/*haxe.Log.clear();
-				trace("Right Collision!", x, y , wall.x, wall.y);*/
-				if(isStunned())
-				{
-					if(magnitude() <= GameSprite.HIGH_BOUNCE_BOUND) vel.x *= -1;
-					else makeLimbs();
-				}
-				else
-				{
-					x = wall.x + wall.width;
-					vel.x = 0;
-				}
-			}
-			else if(vel.y < 0 && lastPos.y >= wall.y + wall.height)
-			{
-				/*haxe.Log.clear();
-				trace("Bottom Collision!", x, y , wall.x, wall.y);*/
-				if(isStunned())
-				{
-					if(magnitude() <= GameSprite.HIGH_BOUNCE_BOUND) vel.y *= -1;
-					else makeLimbs();
-				}
-				else
-				{
-					y = wall.y + wall.height;
+					/*haxe.Log.clear();
+					trace("Top Collision!", x, y , wall.x, wall.y);*/
+					y = wall.y - charHeight;
 					vel.y = 0;
+					if(sp != null) platOn = sp;
+					if(image.is(STICK)) image.setAnimation(STAND);
+					else if(image.is(WALL_JUMP)) vel.x = 0;
+				}
+			}
+			else if(lastRect.y >= wall.y + wall.height)
+			{
+				if(vel.y < 0)
+				{
+					/*haxe.Log.clear();
+					trace("Bottom Collision!", x, y , wall.x, wall.y);*/
+					if(isStunned())
+					{
+						if(magnitude() <= GameSprite.HIGH_BOUNCE_BOUND) vel.y *= -1;
+						else makeLimbs();
+					}
+					else
+					{
+						y = wall.y + wall.height;
+						vel.y = 0;
+					}
+				}
+			}
+			else
+			{
+				var centerX = wall.x + wall.width/2;
+				if(vel.x >= 0 && lastRect.x < centerX)
+				{
+					/*haxe.Log.clear();
+					trace("Left Collision!", x, y , wall.x, wall.y);*/
+					if(isStunned())
+					{
+						if(magnitude() <= GameSprite.HIGH_BOUNCE_BOUND) vel.x *= -1;
+						else makeLimbs();
+					}
+					else
+					{
+						vel.x = 0;
+						x = wall.x - charWidth;
+						wallDir = LEFT;
+					}
+				}
+				else if(vel.x <= 0 && lastRect.x > centerX)
+				{
+					/*haxe.Log.clear();
+					trace("Right Collision!", x, y , wall.x, wall.y);*/
+					if(isStunned())
+					{
+						if(magnitude() <= GameSprite.HIGH_BOUNCE_BOUND) vel.x *= -1;
+						else makeLimbs();
+					}
+					else
+					{
+						x = wall.x + wall.width;
+						vel.x = 0;
+						wallDir = RIGHT;
+					}
 				}
 			}
 		}
@@ -293,7 +322,7 @@ class Player extends GameSprite
 	{
 		if(this.getRect().intersects(lava.getRect()))
 		{
-			if(!onPlatform() && vel.y > 0 && lastPos.y <= lava.y - charHeight)
+			if(!onPlatform() && vel.y > 0 && lastRect.y <= lava.y - charHeight)
 			{
 				var stun = meter.takeDamage(10,lavaStun);
 				if(!isStunned()) stunLength = stun;
@@ -301,7 +330,7 @@ class Player extends GameSprite
 				image.setAnimation(STUN);
 				endAttack();
 			}
-			else if(vel.x >= 0 && lastPos.x <= lava.x - charWidth)
+			else if(vel.x >= 0 && lastRect.x <= lava.x - charWidth)
 			{
 				var stun = meter.takeDamage(10,lavaStun);
 				if(!isStunned()) stunLength = stun;
@@ -309,7 +338,7 @@ class Player extends GameSprite
 				image.setAnimation(STUN);
 				endAttack();
 			}
-			else if(vel.x <= 0 && lastPos.x >= lava.x + lava.width)
+			else if(vel.x <= 0 && lastRect.x >= lava.x + lava.width)
 			{
 				var stun = meter.takeDamage(10,lavaStun);
 				if(!isStunned()) stunLength = stun;
@@ -317,7 +346,7 @@ class Player extends GameSprite
 				image.setAnimation(STUN);
 				endAttack();
 			}
-			else if(vel.y < 0 && lastPos.y >= lava.y + lava.height)
+			else if(vel.y < 0 && lastRect.y >= lava.y + lava.height)
 			{
 				var stun = meter.takeDamage(10,lavaStun);
 				if(!isStunned()) stunLength = stun;
@@ -364,8 +393,68 @@ class Player extends GameSprite
 
 	public function playerCollision(attacker : Player) : Bool
 	{
-		if(attacker.vel.x == 0) wallCollision(attacker.getRect());
-		return attackCollision(attacker);
+		if(attacker.alive())
+		{
+			if(!isStunned() && this.getRect().intersects(attacker.getRect()))
+			{
+				if(lastRect.y <= attacker.y - charHeight)
+				{
+					if(!onPlatform() && vel.y > 0)
+					{
+						vel.y = jumpHeight;
+						image.setAnimation(JUMP);
+						attacker.vel.y = 0;
+					}
+				}
+				else
+				{
+					if(onPlatform() && attacker.onPlatform())
+					{
+						var centerX = attacker.x + charWidth/2;
+						if(wallDir != RIGHT && vel.x >= 0 && lastRect.x < centerX)
+						{
+							vel.x = 0;
+							x = attacker.x - charWidth;
+						}
+						else if(wallDir != LEFT && vel.x <= 0 && lastRect.x > centerX)
+						{
+							x = attacker.x + charWidth;
+							vel.x = 0;
+						}
+					}
+					else
+					{
+						if(wallDir != RIGHT && vel.x >= 0 && lastRect.x < attacker.x - charWidth)
+						{
+							vel.x = 0;
+							x = attacker.x - charWidth;
+						}
+						else if(wallDir != LEFT && vel.x <= 0 && lastRect.x > attacker.x + charWidth)
+						{
+							x = attacker.x + charWidth;
+							vel.x = 0;
+						}
+						else
+						{
+							stunLength = 15; image.setAnimation(STUN);
+							attacker.stunLength = 15; attacker.image.setAnimation(STUN);
+							if(x < attacker.x)
+							{
+								vel.x = -speed;
+								attacker.vel.x = speed;
+							}
+							else
+							{
+								vel.x = speed;
+								attacker.vel.x = -speed;
+							}
+						}
+					}
+				}
+			}
+			return attackCollision(attacker);
+		}
+		return false;
 	}
 
 	private function makeLimbs()
@@ -431,12 +520,41 @@ class Player extends GameSprite
 
 	private function jump()
 	{
-		if(!attacking && !isStunned() && !jumpHeld && onPlatform())
+		if(!attacking && !isStunned() && !jumpHeld)
 		{
-			vel.y = jumpHeight;
-			platOn = null;
-			jumpHeld = true;
-			image.setAnimation(JUMP);
+			if(image.is(STICK) && wallDir == dirHeld)
+			{
+				vel.x = speed * (dirHeld == LEFT ? -1 : 1);
+				vel.y = jumpHeight * 1.25;
+				platOn = null;
+				jumpHeld = true;
+				image.setAnimation(WALL_JUMP);
+			}
+			else if(onPlatform())
+			{
+				vel.y = jumpHeight;
+				platOn = null;
+				jumpHeld = true;
+				image.setAnimation(JUMP);
+			}
+			else if(!image.is(STICK) && wallDir != NONE)
+			{
+				vel.y = 0;
+				jumpHeld = true;
+				//if flipped, then unflip
+				if(image.x > 0)
+				{
+					image.x = 0;
+					image.scaleX = Math.abs(image.scaleX);
+				}
+				//if not flipped, then flip
+				else
+				{
+					image.x = WIDTH;
+					image.scaleX = Math.abs(image.scaleX) * -1;
+				}
+				image.setAnimation(STICK);
+			}
 		}
 	}
 
@@ -449,39 +567,36 @@ class Player extends GameSprite
 
 	private function fastFall()
 	{
-		if(!attacking && !isStunned() && !onPlatform() && (!jumpHeld ||
-		vel.y < 0) && vel.y < 15){vel.y = 15;}
+		if(!attacking && !isStunned() && !image.is(STICK) &&
+		!onPlatform() && (!jumpHeld || vel.y < 0) && vel.y < 15)
+		{vel.y = 15;}
 	}
 
 	private function attack(at : PLAYER_ATTACK)
 	{
+		var p_att : Animation = null;
 		switch(at)
 		{
 			case LG_PUNCH:
-				attacking = true;
-				image.setAnimation(LGP);
-				vel.x = vel.y = 0;
+				p_att = LGP;
 			case HG_PUNCH:
-				attacking = true;
-				image.setAnimation(HGP);
-				vel.x = vel.y = 0;
+				p_att = HGP;
 			case LG_KICK:
-				attacking = true;
-				image.setAnimation(LGK);
-				vel.y = vel.y = 0;
+				p_att = LGK;
 			case HG_KICK:
-				attacking = true;
-				image.setAnimation(HGK);
-				vel.y = vel.y = 0;
+				p_att = HGK;
 			case LG_EYE:
-				attacking = true;
-				image.setAnimation(LGE);
-				vel.y = vel.y = 0;
+				p_att = LGE;
 			case HG_EYE:
-				attacking = true;
-				image.setAnimation(HGE);
-				vel.y = vel.y = 0;
+				p_att = HGE;
 			default:
+		}
+		if(p_att != null)
+		{
+			if(attacking) image.reattack(p_att);
+			else image.setAnimation(p_att);
+			attacking = true;
+			vel.x = vel.y = 0;
 		}
 	}
 
@@ -490,8 +605,8 @@ class Player extends GameSprite
 
 	public function reset(p : Point)
 	{
-		x = curRect.x = lastRect.x = lastPos.x = p.x;
-		y = curRect.y = lastRect.y = lastPos.y = p.y;
+		x = curRect.x = lastRect.x = lastRect.x = p.x;
+		y = curRect.y = lastRect.y = lastRect.y = p.y;
 		vel.x = vel.y = stunLength = 0;
 		visible = true; meter.reset();
 		dead = attacking = false; platOn = null;
@@ -534,39 +649,48 @@ class Player extends GameSprite
 			}
 			else --stunLength;
 		}
-		else if(!attacking)
+		else if(!attacking && !image.is(STICK))
 		{
-			switch(dirHeld)
+			if(image.is(WALL_JUMP))
 			{
-				case LEFT:
-					if(downHeld) noMovement();
-					else if(vel.x < -speed*2) vel.x *= 0.8;
-					else
-					{
-						vel.x = -speed;
-						if(onPlatform() && !image.is(WALK))
-							image.setAnimation(WALK);
-					}
-				case RIGHT:
-					if(downHeld) noMovement();
-					else if(vel.x > speed*2) vel.x *= 0.8;
-					else
-					{
-						vel.x = speed;
-						if(onPlatform() && !image.is(WALK))
-							image.setAnimation(WALK);
-					}
-				default:
-					noMovement();
+				if(vel.y > 0)
+					image.updateWallJump();
 			}
-			setDir();
-			if(!onPlatform() && !image.is(FALL) && vel.y > 0)
-			image.setAnimation(FALL);
+			else
+			{
+				switch(dirHeld)
+				{
+					case LEFT:
+						if(downHeld) noMovement();
+						else if(vel.x < -speed*2) vel.x *= 0.8;
+						else
+						{
+							vel.x = -speed;
+							if(onPlatform() && !image.is(WALK))
+								image.setAnimation(WALK);
+						}
+					case RIGHT:
+						if(downHeld) noMovement();
+						else if(vel.x > speed*2) vel.x *= 0.8;
+						else
+						{
+							vel.x = speed;
+							if(onPlatform() && !image.is(WALK))
+								image.setAnimation(WALK);
+						}
+					default:
+						noMovement();
+				}
+				setDir();
+				if(!onPlatform() && !image.is(FALL) && vel.y > 0)
+					image.setAnimation(FALL);
+			}
 		}
 
 		super.move();
 		image.animate();
 		if(ivLength > 0) --ivLength;
+		if(!image.is(STICK)) wallDir = NONE;
 	}
 
 	private function noMovement()

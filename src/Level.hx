@@ -73,6 +73,18 @@ class Level extends Sprite
 		{
 			sprite.gravity();
 			if(!sprite.visible) continue;
+			if(!sprite.onPlatform())
+			{
+				for(platform in level.platforms)
+				{
+					if(sprite.platformCollision(platform))
+						break;
+				}
+			}
+			for(wall in level.walls)
+			{	sprite.wallCollision(wall.getRect(),wall);}
+			for(l in level.lava)
+			{	sprite.lavaCollision(l);}
 			try
 			{
 				var p1 = cast(sprite, Player);
@@ -90,18 +102,6 @@ class Level extends Sprite
 				}
 			}
 			catch(d:Dynamic)continue;
-			if(!sprite.onPlatform())
-			{
-				for(platform in level.platforms)
-				{
-					if(sprite.platformCollision(platform))
-						break;
-				}
-			}
-			for(wall in level.walls)
-			{	sprite.wallCollision(wall.getRect(),wall);}
-			for(l in level.lava)
-			{	sprite.lavaCollision(l);}
 		}
 
 		//camera movement
@@ -277,7 +277,7 @@ class LevelGeom extends Sprite
 		new Lava(w,Startup.stageHeight(0.1)) : wall.clone();
 		bot.y = h;
 
-		var wall2 = new Wall(Startup.stageWidth(0.1), h);
+		var wall2 = new Wall(Startup.stageWidth(0.2), h);
 		wall2.x = -wall2.width;
 
 		var wall3 = wall2.clone();
