@@ -576,6 +576,7 @@ class Player extends GameSprite
 
 	private function attack(at : PLAYER_ATTACK)
 	{
+		if(isBlocking()) return;
 		var p_att : Animation = switch(at)
 		{
 			case LG_PUNCH:LGP;
@@ -656,7 +657,7 @@ class Player extends GameSprite
 			}
 			else --stunLength;
 		}
-		else if((!attacking || image.is(LA) || image.is(HA)) && !image.is(STICK))
+		else if((!attacking || isBlocking() || image.is(LA) || image.is(HA)) && !image.is(STICK))
 		{
 			if(image.is(WALL_JUMP))
 			{
