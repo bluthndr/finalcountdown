@@ -56,6 +56,10 @@ class Player extends GameSprite
 	knockback : new Point(0.0, -0.65), stun : 120, ivFrames : 10};
 	public static var hgEye : AttackProperties = {damage : 7.25,
 	knockback : new Point(0.0, -1.0),  stun : 300, ivFrames : 30};
+	public static var lAir : AttackProperties = {damage : 1,
+	knockback : new Point(0.75, -0.5), stun : 120, ivFrames : 5};
+	public static var hAir : AttackProperties = {damage : 10,
+	knockback : new Point(0.0, -1.4), stun : 300, ivFrames : 15};
 
 	public function new(p : PlayerPanel, i : UInt = 0)
 	{
@@ -146,7 +150,7 @@ class Player extends GameSprite
 					case 0: if(dirHeld == RIGHT) dirHeld = NONE;
 				}
 			}
-			else if(e.control == controller.down && !downHeld)
+			else if(e.control == controller.down)
 			{
 				switch(e.value)
 				{
@@ -176,6 +180,7 @@ class Player extends GameSprite
 							if(downHeld) attack(dirHeld != NONE ? LG_KICK : LG_EYE);
 							else attack(LG_PUNCH);
 						}
+						else if(!downHeld) attack(L_AIR);
 						attHeld = true;
 					}
 				}
@@ -192,6 +197,7 @@ class Player extends GameSprite
 							if(downHeld) attack(dirHeld != NONE ? HG_KICK : HG_EYE);
 							else attack(HG_PUNCH);
 						}
+						else if(!downHeld) attack(H_AIR);
 						attHeld = true;
 					}
 				}
@@ -220,6 +226,7 @@ class Player extends GameSprite
 					if(downHeld) attack(dirHeld != NONE ? LG_KICK : LG_EYE);
 					else attack(LG_PUNCH);
 				}
+				else if(!downHeld) attack(L_AIR);
 			}
 			else if(e.keyCode == controller.hAtt)
 			{
@@ -229,6 +236,7 @@ class Player extends GameSprite
 					if(downHeld) attack(dirHeld != NONE ? HG_KICK : HG_EYE);
 					else attack(HG_PUNCH);
 				}
+				else if(!downHeld) attack(H_AIR);
 			}
 		}
 	}
@@ -244,13 +252,14 @@ class Player extends GameSprite
 
 	override public function platformCollision(plat : Platform) : Bool
 	{
-		if(image.is(STICK) || image.is(WALL_JUMP))
+		if(image.is(STICK) || image.is(WALL_JUMP) || image.is(LA) || image.is(HA))
 		{
 			var rval = super.platformCollision(plat);
 			if(rval)
 			{
 				image.setAnimation(STAND);
 				vel.x = 0;
+				endAttack();
 			}
 			return rval;
 		}
@@ -270,8 +279,13 @@ class Player extends GameSprite
 					y = wall.y - charHeight;
 					vel.y = 0;
 					if(sp != null) platOn = sp;
-					if(image.is(STICK)) image.setAnimation(STAND);
-					else if(image.is(WALL_JUMP)) vel.x = 0;
+					if(image.is(STICK) || image.is(WALL_JUMP) ||
+					image.is(LA) || image.is(HA))
+					{
+						image.setAnimation(STAND);
+						vel.x = 0;
+						endAttack();
+					}
 				}
 			}
 			else if(lastRect.y >= wall.y + wall.height)
@@ -387,6 +401,8 @@ class Player extends GameSprite
 					case HG_KICK: hgKick;
 					case LG_EYE: lgEye;
 					case HG_EYE: hgEye;
+					case L_AIR: lAir;
+					case H_AIR: hAir;
 				};
 				if(isBlocking()) attacker.takeDamage(damage, attacker.image.scaleX > 0);
 				else takeDamage(damage, attacker.image.scaleX < 0);
@@ -560,29 +576,24 @@ class Player extends GameSprite
 
 	private function attack(at : PLAYER_ATTACK)
 	{
-		var p_att : Animation = null;
-		switch(at)
+		var p_att : Animation = switch(at)
 		{
-			case LG_PUNCH:
-				p_att = LGP;
-			case HG_PUNCH:
-				p_att = HGP;
-			case LG_KICK:
-				p_att = LGK;
-			case HG_KICK:
-				p_att = HGK;
-			case LG_EYE:
-				p_att = LGE;
-			case HG_EYE:
-				p_att = HGE;
-			default:
+			case LG_PUNCH:LGP;
+			case HG_PUNCH:HGP;
+			case LG_KICK: LGK;
+			case HG_KICK: HGK;
+			case LG_EYE: LGE;
+			case HG_EYE: HGE;
+			case L_AIR: LA;
+			case H_AIR: HA;
 		}
 		if(p_att != null)
 		{
 			if(attacking) image.reattack(p_att);
 			else image.setAnimation(p_att);
 			attacking = true;
-			vel.x = vel.y = 0;
+			if(p_att != LA && p_att != HA)
+				vel.x = vel.y = 0;
 		}
 	}
 
@@ -645,7 +656,7 @@ class Player extends GameSprite
 			}
 			else --stunLength;
 		}
-		else if(!attacking && !image.is(STICK))
+		else if((!attacking || image.is(LA) || image.is(HA)) && !image.is(STICK))
 		{
 			if(image.is(WALL_JUMP))
 			{
@@ -692,7 +703,7 @@ class Player extends GameSprite
 				}
 				else
 				{
-					if(!image.is(FALL) && vel.y > 0)
+					if(!attacking && !image.is(FALL) && vel.y > 0)
 						image.setAnimation(FALL);
 				}
 			}

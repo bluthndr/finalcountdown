@@ -8,6 +8,8 @@ enum PLAYER_ATTACK
 	HG_PUNCH;
 	HG_KICK;
 	HG_EYE;
+	L_AIR;
+	H_AIR;
 }
 typedef Attack = {area : HitCircle, type : PLAYER_ATTACK}
 typedef Anim = {x : Float, y : Float, rot : Float}
@@ -36,4 +38,8 @@ enum Animation
 	//eyes
 	LGE;
 	HGE;
+
+	//air attacks
+	LA;
+	HA;
 }

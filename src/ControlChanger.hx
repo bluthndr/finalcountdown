@@ -32,8 +32,8 @@ class ControlChanger extends Sprite
 		addEventListener(Event.ADDED, function()
 		{
 			removeEventListeners(Event.ADDED);
-			if(ctrl.gamepad) Gamepad.get().addEventListener(GamepadEvent.CHANGE, changePadCtrl);
-			else addEventListener(KeyboardEvent.KEY_DOWN, changeKeyboardCtrl);
+			Gamepad.get().addEventListener(GamepadEvent.CHANGE, changePadCtrl);
+			addEventListener(KeyboardEvent.KEY_DOWN, changeKeyboardCtrl);
 		});
 	}
 
@@ -52,13 +52,30 @@ class ControlChanger extends Sprite
 		{
 			parent.dispatchEventWith(DONE);
 			removeEventListeners();
+			Gamepad.get().removeEventListener(GamepadEvent.CHANGE, changePadCtrl);
 		}
 		else stateText.text = stateTexts[curState];
 	}
 
 	private function changePadCtrl(e:GamepadEvent)
-	{	if(e.value == 1) update(e.control);}
+	{
+		if(curState == 0)
+		{
+			removeEventListener(KeyboardEvent.KEY_DOWN, changeKeyboardCtrl);
+			ctrl.gamepad = true;
+			ctrl.padID = e.deviceIndex;
+		}
+		if(e.value == 1)
+			update(e.control);
+	}
 
 	private function changeKeyboardCtrl(e:KeyboardEvent)
-	{	update(e.keyCode);}
+	{
+		if(curState == 0)
+		{
+			Gamepad.get().removeEventListener(GamepadEvent.CHANGE, changePadCtrl);
+			ctrl.gamepad = false;
+		}
+		update(e.keyCode);
+	}
 }

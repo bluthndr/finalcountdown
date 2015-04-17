@@ -127,8 +127,12 @@ class PlayerImage extends Sprite
 			case HGE:
 				//trace("set heavy ground eye animation");
 				setAnim(PlayerAnimations.hgEyeAnim[0]);
-			default:
-				//trace("Set default animation");
+			case LA:
+				//trace("set light air animation");
+				setAnim(PlayerAnimations.lAirAnim[0]);
+			case HA:
+				//trace("set heavy air animation");
+				setAnim(PlayerAnimations.hAirAnim[0]);
 		}
 		curFrame = 0;
 		curAnim = a;
@@ -175,10 +179,10 @@ class PlayerImage extends Sprite
 				if(++curFrame >= cast(PlayerAnimations.walkAnim.length, UInt)) setAnimation(STICK);
 				else setAnim(PlayerAnimations.walkAnim[curFrame]);
 			case STICK:
-				setAnimation(FALL);
-			case GUARD:
 				setAnimation(GUARD);
-			case JUMP:
+			case GUARD:
+				setAnimation(JUMP);
+			case JUMP, WALL_JUMP:
 				setAnimation(FALL);
 			case FALL:
 				setAnimation(STUN);
@@ -200,10 +204,14 @@ class PlayerImage extends Sprite
 				if(++curFrame >= cast(PlayerAnimations.lgEyeAnim.length, UInt)) setAnimation(HGE);
 				else setAnim(PlayerAnimations.lgEyeAnim[curFrame]);
 			case HGE:
-				if(++curFrame >= cast(PlayerAnimations.hgEyeAnim.length, UInt)) setAnimation(STAND);
+				if(++curFrame >= cast(PlayerAnimations.hgEyeAnim.length, UInt)) setAnimation(LA);
 				else setAnim(PlayerAnimations.hgEyeAnim[curFrame]);
-			default:
-				setAnimation(STAND);
+			case LA:
+				if(++curFrame >= cast(PlayerAnimations.lAirAnim.length, UInt)) setAnimation(HA);
+				else setAnim(PlayerAnimations.lAirAnim[curFrame]);
+			case HA:
+				if(++curFrame >= cast(PlayerAnimations.hAirAnim.length, UInt)) setAnimation(STAND);
+				else setAnim(PlayerAnimations.hAirAnim[curFrame]);
 		}
 		trace(curAnim, curFrame);
 	}
@@ -324,6 +332,32 @@ class PlayerImage extends Sprite
 						else curFrame = 0;
 					}
 				}
+			case LA:
+				if(frameCount % 2 == 0)
+				{
+					if(++curFrame < cast(PlayerAnimations.lAirAnim.length, UInt))
+						setAnim(PlayerAnimations.lAirAnim[curFrame % PlayerAnimations.lAirAnim.length]);
+					else
+					{
+						//trace("Dispatch event...");
+						parent.dispatchEventWith(Player.END_ATTACK);
+						if(!hasEventListener(Event.ENTER_FRAME)) setAnimation(STAND);
+						else curFrame = 0;
+					}
+				}
+			case HA:
+				if(frameCount % 2 == 0)
+				{
+					if(++curFrame < cast(PlayerAnimations.hAirAnim.length, UInt))
+						setAnim(PlayerAnimations.hAirAnim[curFrame % PlayerAnimations.hAirAnim.length]);
+					else
+					{
+						//trace("Dispatch event...");
+						parent.dispatchEventWith(Player.END_ATTACK);
+						if(!hasEventListener(Event.ENTER_FRAME)) setAnimation(STAND);
+						else curFrame = 0;
+					}
+				}
 			case STUN:
 				images[0].rotation += deg2rad(30);
 				images[4].rotation += deg2rad(30);
@@ -376,6 +410,17 @@ class PlayerImage extends Sprite
 					[{area : circles[0], type : HG_EYE},
 					{area : circles[4], type : HG_EYE}];
 				}
+				else [];
+			case LA:
+				if(curFrame == 3 || curFrame == 4)
+				{
+					[{area : circles[2], type : L_AIR},
+					{area : circles[6], type : L_AIR}];
+				}
+				else [];
+			case HA:
+				if(curFrame >= 10 && curFrame <= 12)
+					[{area : circles[5], type : H_AIR}];
 				else [];
 			default: [];
 		};
