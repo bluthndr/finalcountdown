@@ -25,8 +25,15 @@ class PlayerMeter extends Sprite
 
 		alpha = 0.5;
 
-		x = Startup.stageWidth(0.25*i) + Startup.stageWidth(0.05);
-		y = Startup.stageHeight(0.9);
+		if(i < 4)
+		{
+			x = Startup.stageWidth(0.25*i) + Startup.stageWidth(0.05);
+			y = Startup.stageHeight(0.9);
+		}
+		else
+		{
+			x = Startup.stageWidth(0.25*(i-4)) + Startup.stageWidth(0.05);
+		}
 	}
 
 	public function takeDamage(d : Float, t : UInt = 60) : Int

@@ -274,11 +274,11 @@ class LevelGeom extends Sprite
 		wall.y = -wall.height;
 
 		var bot : Dynamic = botLava ?
-		new Lava(w,Startup.stageHeight(0.1)) : wall.clone();
-		bot.y = h;
+		new Lava(w+Startup.stageWidth(0.4),Startup.stageHeight(0.5)) : wall.clone();
+		bot.x = -Startup.stageWidth(0.2);bot.y = h;
 
-		var wall2 = new Wall(Startup.stageWidth(0.2), h);
-		wall2.x = -wall2.width;
+		var wall2 = new Wall(Startup.stageWidth(0.2), h+Startup.stageHeight(0.2));
+		wall2.x = -wall2.width; wall2.y = Startup.stageHeight(-0.1);
 
 		var wall3 = wall2.clone();
 		wall3.x = w;

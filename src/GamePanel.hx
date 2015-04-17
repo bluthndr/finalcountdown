@@ -15,10 +15,10 @@ class GamePanel extends Sprite
 	{
 		super();
 		panels = new Array();
-		for(i in 0...4)
+		for(i in 0...8)
 		{
 			var panel = new PlayerPanel(i);
-			panel.x = Startup.stageWidth(i * 0.25) + Startup.stageWidth(0.0075);
+			panel.x = Startup.stageWidth(i * 0.125) + Startup.stageWidth(0.0075);
 			panel.y = Startup.stageHeight(0.25);
 			panels.push(panel);
 			addChild(panel);

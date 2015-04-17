@@ -45,7 +45,6 @@ class Game extends Sprite
 		touchable = false;
 
 		//lists
-		var lavas = new Array<Lava>();
 		var plats = new Array<Platform>();
 		var positions = new Array<Point>();
 		var levelWidth = Startup.stageWidth(2);
@@ -56,15 +55,26 @@ class Game extends Sprite
 		{
 			var plat = new Platform(100,50);
 			plat.x = i;
-			plat.y = levelHeight * (top ? 0.6 : 0.85);
+			plat.y = levelHeight * (top ? 0.5 : 0.75);
 			top = !top;
 			plats.push(plat);
-			if(i < levelWidth * 0.4)
-				positions.push(new Point(i + 50, 10));
 			i += (levelWidth * 0.1);
 		}
+		var space = Startup.stageWidth(0.1);
+		for(i in 0...8)
+		{
+			if(i < 4)
+				positions.push(new Point(i*space,10));
+			else
+				positions.push(new Point(levelWidth - Player.WIDTH - ((i-4)*space),10));
+		}
+		var wall = new Wall(Startup.stageWidth(0.8), Startup.stageHeight(0.1));
+		wall.y = Startup.stageHeight();
+
+		var wall2 = wall.clone();
+		wall.x = Startup.stageWidth(1.2);
 
 		addChild(new Level(levelWidth,levelHeight,
-		positions, panel.loadPlayers(), plats, null, null, false));
+		positions, panel.loadPlayers(), plats, [wall,wall2], null, true));
 	}
 }

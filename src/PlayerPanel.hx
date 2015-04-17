@@ -37,7 +37,7 @@ class PlayerPanel extends Sprite
 		colors = new Array();
 		for(i in 0...3) colors.push(Std.random(256));
 
-		quad = new Quad(Startup.stageWidth(0.2), Startup.stageHeight(0.75), getColor());
+		quad = new Quad(Startup.stageWidth(0.125), Startup.stageHeight(0.75), getColor());
 		addChild(quad);
 
 		buttons = new Array();
@@ -60,7 +60,7 @@ class PlayerPanel extends Sprite
 					addChild(buttons[i]);
 				case 1,3,5:
 					buttons[i].width /= 2;
-					buttons[i].y = buttons[i-1].y + buttons[i-1].height*1.75;
+					buttons[i].y = buttons[i-1].y + buttons[i-1].height*1.5;
 					addChild(buttons[i]);
 					buttons[i].textHAlign = HAlign.RIGHT;
 				case 2,4,6:
@@ -70,7 +70,7 @@ class PlayerPanel extends Sprite
 					buttons[i].textHAlign = HAlign.LEFT;
 					addChild(buttons[i]);
 				default:
-					buttons[i].y = buttons[i-1].y + buttons[i-1].height*1.75;
+					buttons[i].y = buttons[i-1].y + buttons[i-1].height*1.5;
 					addChild(buttons[i]);
 			}
 		}
@@ -78,6 +78,15 @@ class PlayerPanel extends Sprite
 		cursor = new Cursor(getColor());
 		ctrl = switch(id)
 		{
+			case 0:
+				{left : Keyboard.LEFT,
+				right : Keyboard.RIGHT,
+				down : Keyboard.DOWN,
+				up : Keyboard.UP,
+				lAtt : Keyboard.SHIFT,
+				hAtt : Keyboard.CONTROL,
+				gamepad : false,
+				padID: -1};
 			case 1:
 				{left : Keyboard.A,
 				right : Keyboard.D,
@@ -106,24 +115,23 @@ class PlayerPanel extends Sprite
 				gamepad : false,
 				padID: -1};
 			default:
-				{left : Keyboard.LEFT,
-				right : Keyboard.RIGHT,
-				down : Keyboard.DOWN,
-				up : Keyboard.UP,
-				lAtt : Keyboard.SHIFT,
-				hAtt : Keyboard.CONTROL,
+				{left : -1,
+				right : -1,
+				down : -1,
+				up : -1,
+				lAtt : -1,
+				hAtt : -1,
 				gamepad : false,
-				padID: -1};
+				padID : -1};
+
 		};
 		addEventListener(Event.ADDED_TO_STAGE, function()
 		{
 			touchable = false;
 			var nx = x; x = Startup.stageWidth(switch(id)
 			{
-				case 0: -0.5;
-				case 1: -0.25;
-				case 2: 1.25;
-				default: 1.5;
+				case 0,1,2,3: -1;
+				default: 2;
 			});
 			Starling.juggler.tween(this, 0.5, {x : nx, delay : 0,
 			onComplete : function(){touchable = true;}});
@@ -305,11 +313,11 @@ class PanelButton extends GameButton
 	public var trigger : Dynamic;
 	public function new(s : String, fn : Void->Void, ?fn2 : UInt->Void, ?c : UInt)
 	{
-		super(cast(Startup.stageWidth(0.2),Int),50,s,function()
+		super(cast(Startup.stageWidth(0.125),Int),50,s,function()
 		{
 			if(fn != null) fn();
 		});
-		addChildAt(new Quad(Startup.stageWidth(0.2),50, c == null ? 0 : c), 0);
+		addChildAt(new Quad(Startup.stageWidth(0.125),50, c == null ? 0 : c), 0);
 		trigger = fn == null ? fn2 : fn;
 	}
 }
