@@ -21,7 +21,7 @@ class ControlChanger extends Sprite
 		super();
 
 		addChild(new starling.display.Quad(200,400,0));
-		addChild(new GameText(200,200, "Setting Controls for Player #" + id));
+		addChild(new GameText(200,200, "Setting Controls for Player #" + (id+1)));
 
 		curState = 0;
 		stateText = new GameText(200,200, stateTexts[curState]);

@@ -65,7 +65,7 @@ class PlayerLimb extends GameSprite
 		{
 			if(lastRect.y <= wall.y - charHeight)
 			{
-				if(!onPlatform() && vel.y > 0)
+				if(!onPlatform())
 				{
 					y = wall.y - charHeight;
 					if(vel.y > -3 && vel.y < 3)

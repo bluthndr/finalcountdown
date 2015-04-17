@@ -1,8 +1,9 @@
+import starling.core.Starling;
 import starling.display.*;
 import starling.events.*;
+import starling.utils.*;
 import GameText;
 import bitmasq.*;
-import starling.utils.Color;
 import flash.ui.*;
 import flash.geom.*;
 
@@ -31,6 +32,7 @@ class PlayerPanel extends Sprite
 		super();
 		playerID = id;
 		type = id == 0 ? HUMAN : NONE;
+		alpha = type == NONE ? 0.5 : 1.0;
 		ready = false;
 		colors = new Array();
 		for(i in 0...3) colors.push(Std.random(256));
@@ -40,12 +42,12 @@ class PlayerPanel extends Sprite
 
 		buttons = new Array();
 		buttons.push(new PanelButton("Player Type: " + typeString(), changeType));
-		buttons.push(new PanelButton("<", decRed));
-		buttons.push(new PanelButton(">", incRed));
-		buttons.push(new PanelButton("<", decGreen));
-		buttons.push(new PanelButton(">", incGreen));
-		buttons.push(new PanelButton("<", decBlue));
-		buttons.push(new PanelButton(">", incBlue));
+		buttons.push(new PanelButton("<R", decRed,null,0xff0000));
+		buttons.push(new PanelButton("ED>", incRed,null,0xff0000));
+		buttons.push(new PanelButton("<GR", decGreen,null,0x00ff00));
+		buttons.push(new PanelButton("EEN>", incGreen,null,0x00ff00));
+		buttons.push(new PanelButton("<BL", decBlue,null,0x0000ff));
+		buttons.push(new PanelButton("UE>", incBlue,null,0x0000ff));
 		buttons.push(new PanelButton("Change Controls", null, changeControls));
 		buttons.push(new PanelButton("Ready: " + (ready ? "Yes" : "No"), triggerReady));
 
@@ -60,10 +62,12 @@ class PlayerPanel extends Sprite
 					buttons[i].width /= 2;
 					buttons[i].y = buttons[i-1].y + buttons[i-1].height*1.75;
 					addChild(buttons[i]);
+					buttons[i].textHAlign = HAlign.RIGHT;
 				case 2,4,6:
 					buttons[i].width /= 2;
 					buttons[i].x = buttons[i].width;
 					buttons[i].y = buttons[i-1].y;
+					buttons[i].textHAlign = HAlign.LEFT;
 					addChild(buttons[i]);
 				default:
 					buttons[i].y = buttons[i-1].y + buttons[i-1].height*1.75;
@@ -111,6 +115,19 @@ class PlayerPanel extends Sprite
 				gamepad : false,
 				padID: -1};
 		};
+		addEventListener(Event.ADDED_TO_STAGE, function()
+		{
+			touchable = false;
+			var nx = x; x = Startup.stageWidth(switch(id)
+			{
+				case 0: -0.5;
+				case 1: -0.25;
+				case 2: 1.25;
+				default: 1.5;
+			});
+			Starling.juggler.tween(this, 0.5, {x : nx, delay : 0,
+			onComplete : function(){touchable = true;}});
+		});
 	}
 
 	private inline function decRed()
@@ -260,6 +277,7 @@ class PlayerPanel extends Sprite
 			case CPU: NONE;
 			case NONE: HUMAN;
 		};
+		alpha = type == NONE ? 0.5 : 1.0;
 		reset();
 	}
 
@@ -285,13 +303,13 @@ class PlayerPanel extends Sprite
 class PanelButton extends GameButton
 {
 	public var trigger : Dynamic;
-	public function new(s : String, fn : Void->Void, ?fn2 : UInt->Void)
+	public function new(s : String, fn : Void->Void, ?fn2 : UInt->Void, ?c : UInt)
 	{
 		super(cast(Startup.stageWidth(0.2),Int),50,s,function()
 		{
 			if(fn != null) fn();
 		});
-		addChildAt(new Quad(Startup.stageWidth(0.2),50,0),0);
+		addChildAt(new Quad(Startup.stageWidth(0.2),50, c == null ? 0 : c), 0);
 		trigger = fn == null ? fn2 : fn;
 	}
 }

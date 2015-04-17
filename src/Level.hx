@@ -340,10 +340,10 @@ class Camera
 	public function move(center : Point, positions : Array<Point>)
 	{
 		//move camera
-		if(x < center.x - cameraSpeed*10) x += cameraSpeed;
-		else if(x > center.x + cameraSpeed*10) x -= cameraSpeed;
-		if(y < center.y - cameraSpeed*10) y += cameraSpeed;
-		else if(y > center.y + cameraSpeed*10) y -= cameraSpeed;
+		if(x < center.x - cameraSpeed*2) x += cameraSpeed;
+		else if(x > center.x + cameraSpeed*2) x -= cameraSpeed;
+		if(y < center.y - cameraSpeed*2) y += cameraSpeed;
+		else if(y > center.y + cameraSpeed*2) y -= cameraSpeed;
 
 		//bound camera
 		if(x < lowBound.x) x = lowBound.x;
