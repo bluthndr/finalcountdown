@@ -5,7 +5,6 @@ import flash.geom.Point;
 import flash.ui.*;
 import bitmasq.*;
 import GameText;
-import PlayerPanel;
 
 class GamePanel extends Sprite
 {
@@ -24,6 +23,7 @@ class GamePanel extends Sprite
 			addChild(panel);
 		}
 		reset();
+		addEventListener(Event.REMOVED, removeInputListeners);
 	}
 
 	public function reset()
@@ -69,7 +69,7 @@ class GamePanel extends Sprite
 		if(e.keyCode == Keyboard.F1)
 		{
 			Game.game.removeChildren();
-			Game.game.addChild(new Animator());
+			Game.game.addChild(new LevelEditor());
 		}
 		else
 		{
@@ -101,7 +101,7 @@ class GamePanel extends Sprite
 		if(ready)
 		{
 			removeInputListeners();
-			Game.game.makeTestLevel();
+			Game.game.gotoLevelSelect();
 		}
 	}
 
@@ -120,6 +120,9 @@ class GamePanel extends Sprite
 		}
 		return players;
 	}
+
+	public inline function getTopCtrls() : Controller
+	{	return panels[0].getCtrls();}
 
 	private function changeCtrls(e:ControlChangerEvent)
 	{

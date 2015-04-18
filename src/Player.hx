@@ -274,17 +274,20 @@ class Player extends GameSprite
 			{
 				if(!onPlatform() && vel.y > 0)
 				{
-					/*haxe.Log.clear();
-					trace("Top Collision!", x, y , wall.x, wall.y);*/
-					y = wall.y - charHeight;
-					vel.y = 0;
-					if(sp != null) platOn = sp;
-					if(image.is(STICK) || image.is(WALL_JUMP) ||
-					image.is(LA) || image.is(HA))
+					if(isStunned() && magnitude() > GameSprite.HIGH_BOUNCE_BOUND)
+						makeLimbs();
+					else
 					{
-						image.setAnimation(STAND);
-						vel.x = 0;
-						endAttack();
+						y = wall.y - charHeight;
+						vel.y = 0;
+						if(sp != null) platOn = sp;
+						if(image.is(STICK) || image.is(WALL_JUMP) ||
+						image.is(LA) || image.is(HA))
+						{
+							image.setAnimation(STAND);
+							vel.x = 0;
+							endAttack();
+						}
 					}
 				}
 			}

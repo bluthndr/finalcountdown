@@ -7,26 +7,21 @@ class Level extends Sprite
 {
 	private var sprites : Array<GameSprite>;
 	private var meters : Array<PlayerMeter>;
-	private var level : LevelGeom;
-	private var spawnPoints : Array<Point>;
+	private var level : LevelMap;
 	private var camera : Camera;
 
 	private var showFPS : Bool;
 	private var frameCount : UInt;
 	private var timePassed : Float;
 
-	public function new(w : Float, h : Float, pos : Array<Point>, sp : Array<GameSprite>,
-	plats : Array<Platform>, walls : Array<Wall>, lava : Array<Lava>, bottomLava : Bool)
+	public function new(map : LevelMap, players : Array<GameSprite>)
 	{
 		super();
 
-		if(w < Startup.stageWidth()) w = Startup.stageWidth();
-		if(h < Startup.stageHeight()) h = Startup.stageHeight();
-		camera = new Camera(w,h);
+		camera = new Camera(map.width, map.height);
 
-		spawnPoints = pos;
-		sprites = sp;
-		level = new LevelGeom(w,h,plats,walls,lava,bottomLava);
+		sprites = players;
+		level = map;
 
 		addEventListener(Event.ADDED_TO_STAGE, addHandler);
 		addEventListener(KeyboardEvent.KEY_UP, debugFunc);
@@ -45,8 +40,8 @@ class Level extends Sprite
 		addChild(level);
 		for(i in 0...sprites.length)
 		{
-			sprites[i].x = spawnPoints[i].x;
-			sprites[i].y = spawnPoints[i].y;
+			sprites[i].x = level.spawnPoints[i].x;
+			sprites[i].y = level.spawnPoints[i].y;
 			camera.x += sprites[i].x;
 			camera.y += sprites[i].y;
 			addChild(sprites[i]);
@@ -170,7 +165,7 @@ class Level extends Sprite
 				for(i in 0...sprites.length)
 				{
 					try
-					{cast(sprites[i],Player).reset(spawnPoints[i]);}
+					{cast(sprites[i],Player).reset(level.spawnPoints[i]);}
 					catch(d:Dynamic){continue;}
 				}
 			case Keyboard.F3:
@@ -198,7 +193,7 @@ class Level extends Sprite
 		for(i in 0...sprites.length)
 		{
 			if(sprites[i] == p)
-				return spawnPoints[i];
+				return level.spawnPoints[i];
 		}
 		throw "Player isn't in the level...";
 	}
@@ -229,65 +224,6 @@ class Level extends Sprite
 		s += Std.string(level);
 		for(sprite in sprites) s += Std.string(sprite) + "\n";
 		return s;
-	}
-}
-
-class LevelGeom extends Sprite
-{
-	public var platforms : Array<Platform>;
-	public var walls : Array<Wall>;
-	public var lava : Array<Lava>;
-
-	public function new(wd : Float, h : Float, p : Array<Platform>,
-				w : Array<Wall>, ?lv : Array<Lava>, botLava : Bool)
-	{
-		super();
-
-		walls = w == null ? new Array<Wall>() : w;
-		platforms = p;
-		lava = lv == null ? new Array<Lava>() : lv;
-
-		addBoundWalls(wd,h,botLava);
-		for(wall in walls) addChild(wall);
-		for(plat in platforms) addChild(plat);
-		for(l in lava) addChild(l);
-		addEventListener(Event.ADDED, addHandle);
-	}
-
-	private function addHandle(e:Event)
-	{
-		removeEventListener(Event.ADDED,addHandle);
-		flatten();
-	}
-
-	public function toString() : String
-	{
-		var s = "";
-		for(wall in walls) s += Std.string(wall) + "\n";
-		for(platform in platforms) s += Std.string(platform) + "\n";
-		return s;
-	}
-
-	private function addBoundWalls(w : Float, h : Float, botLava : Bool)
-	{
-		var wall = new Wall(w, Startup.stageHeight(0.1));
-		wall.y = -wall.height;
-
-		var bot : Dynamic = botLava ?
-		new Lava(w+Startup.stageWidth(0.4),Startup.stageHeight(0.5)) : wall.clone();
-		bot.x = -Startup.stageWidth(0.2);bot.y = h;
-
-		var wall2 = new Wall(Startup.stageWidth(0.2), h+Startup.stageHeight(0.2));
-		wall2.x = -wall2.width; wall2.y = Startup.stageHeight(-0.1);
-
-		var wall3 = wall2.clone();
-		wall3.x = w;
-
-		if(botLava) lava.push(bot);
-		else walls.push(bot);
-		walls.push(wall);
-		walls.push(wall2);
-		walls.push(wall3);
 	}
 }
 
