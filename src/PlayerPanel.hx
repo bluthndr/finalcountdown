@@ -41,7 +41,7 @@ class PlayerPanel extends Sprite
 		addChild(quad);
 
 		buttons = new Array();
-		buttons.push(new PanelButton("Player Type: " + typeString(), changeType));
+		buttons.push(new PanelButton("Type: " + typeString(), changeType));
 		buttons.push(new PanelButton("<R", decRed,null,0xff0000));
 		buttons.push(new PanelButton("ED>", incRed,null,0xff0000));
 		buttons.push(new PanelButton("<GR", decGreen,null,0x00ff00));
@@ -273,7 +273,7 @@ class PlayerPanel extends Sprite
 
 	public function updateText()
 	{
-		buttons[0].text = "Player Type: " + typeString();
+		buttons[0].text = "Type: " + typeString();
 		buttons[8].text = "Ready: " + (ready ? "Yes" : "No");
 	}
 

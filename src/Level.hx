@@ -14,28 +14,58 @@ class Level extends Sprite
 	private var frameCount : UInt;
 	private var timePassed : Float;
 
+	private inline static var pregameText =
+	"Game will begin in: ";
+
 	public function new(map : LevelMap, players : Array<GameSprite>)
 	{
 		super();
 
-		camera = new Camera(map.width, map.height);
-
 		sprites = players;
 		level = map;
 
-		addEventListener(Event.ADDED_TO_STAGE, addHandler);
-		addEventListener(KeyboardEvent.KEY_UP, debugFunc);
+		camera = new Camera(level.minX, level.minY, map.width, map.height);
+
+		addEventListener(Event.ADDED_TO_STAGE, preGame);
 
 		showFPS = false;
 		frameCount = 0; timePassed = 0;
 		meters = new Array();
 	}
 
-	private function addHandler(e:Event)
+	private function preGame(e:Event)
 	{
-		removeEventListener(Event.ADDED_TO_STAGE, addHandler);
-		addEventListener(Event.ENTER_FRAME, update);
+		removeEventListener(Event.ADDED_TO_STAGE, preGame);
+		addEventListener(Event.ENTER_FRAME, countdown);
+		loadSprites();
+		var countText = new GameText(100,100,pregameText + "3");
+		countText.x = Startup.stageWidth(0.5) - countText.width/2;
+		countText.y = Startup.stageHeight(0.5) - countText.height/2;
+		countText.name = "Pregame";
+		Game.game.addChild(countText);
 
+	}
+
+	private function countdown(e:EnterFrameEvent)
+	{
+		timePassed += e.passedTime;
+		var t = cast(Game.game.getChildByName("Pregame"), GameText);
+		t.text = pregameText + Std.string(Math.ceil(-timePassed+3));
+		if(timePassed > 3) startgame();
+		moveCamera();
+	}
+
+	private function startgame()
+	{
+		Game.game.removeChild(Game.game.getChildByName("Pregame"));
+		removeEventListener(Event.ENTER_FRAME, countdown);
+
+		addEventListener(Event.ENTER_FRAME, update);
+		addEventListener(KeyboardEvent.KEY_UP, debugFunc);
+	}
+
+	private function loadSprites()
+	{
 		//add all children to level
 		addChild(level);
 		for(i in 0...sprites.length)
@@ -46,7 +76,7 @@ class Level extends Sprite
 			camera.y += sprites[i].y;
 			addChild(sprites[i]);
 		}
-		moveCamera();
+
 		//for(i in 0...numChildren) trace(getChildAt(i));
 	}
 
@@ -236,10 +266,10 @@ class Camera
 	public var highBound : Point;
 	public inline static var cameraSpeed = 10;
 
-	public function new(w : Float, h : Float)
+	public function new(mx : Float, my : Float, w : Float, h : Float)
 	{
 		scale = 1;
-		lowBound = new Point(Startup.stageWidth(0.5),Startup.stageHeight(0.5));
+		lowBound = new Point(mx + Startup.stageWidth(0.5), my + Startup.stageHeight(0.5));
 		highBound = new Point(w - lowBound.x, h - lowBound.y);
 		x = lowBound.x; y = lowBound.y;
 	}

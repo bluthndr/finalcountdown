@@ -9,6 +9,8 @@ class LevelMap extends Sprite
 	public var walls : Array<Wall>;
 	public var lava : Array<Lava>;
 	public var spawnPoints : Array<Point>;
+	public var minX : Float;
+	public var minY : Float;
 
 	private function new(dataList : Array<Placeable>)
 	{
@@ -19,8 +21,11 @@ class LevelMap extends Sprite
 		lava = new Array();
 		spawnPoints = [for(i in 0...8) new Point()];
 
+		minX = minY = 0;
 		for(data in dataList)
 		{
+			if(data.x < minX) minX = data.x;
+			if(data.y < minY) minY = data.y;
 			switch(data.type)
 			{
 				case 0:
@@ -36,7 +41,8 @@ class LevelMap extends Sprite
 					lv.x = data.x; lv.y = data.y;
 					lava.push(lv);
 				default:
-					spawnPoints[data.type-3] = new Point(data.x,data.y);
+					spawnPoints[data.type-3].x = data.x;
+					spawnPoints[data.type-3].y = data.y;
 			}
 		}
 		for(wall in walls) addChild(wall);

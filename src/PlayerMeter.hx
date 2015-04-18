@@ -13,12 +13,10 @@ class PlayerMeter extends Sprite
 		super();
 		damage = 0;
 
-		addChild(new Quad(100,50,p.getColor()));
-		var q = new Quad(80,30, 0);
-		q.x = q.y = 10;
-		addChild(q);
-
-		output = new GameText(100, 50, Std.string(Math.floor(damage))+"%");
+		addChild(new Quad(100,50, p.getColor()));
+		output = new GameText(80, 30, Std.string(Math.floor(damage))+"%");
+		output.x = 50; output.y = 25;
+		output.alignPivot();
 		output.vAlign = VAlign.CENTER;
 		output.hAlign = HAlign.CENTER;
 		addChild(output);

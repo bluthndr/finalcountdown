@@ -7,7 +7,7 @@ import bitmasq.*;
 class LevelSelector extends Sprite
 {
 	private var cursor : Cursor;
-	private var buttons : Array<Quad>;
+	private var buttons : Array<GameText>;
 	private var ctrl : Controller;
 
 	private static inline var MAX_LEVELS = 10;
@@ -18,23 +18,19 @@ class LevelSelector extends Sprite
 
 		var gt = new GameText(Std.int(Startup.stageWidth(0.7)),
 		Std.int(Startup.stageHeight(0.2)),"Select a stage");
-		gt.color = 0; gt.fontSize = 50;
+		gt.fontSize = 50;
 		gt.x = Startup.stageWidth(0.3); addChild(gt);
 
 		buttons = new Array();
 		for(i in 0...GameLevel.LEVEL_NUM)
 		{
 			var c = Std.int(i * 255/GameLevel.LEVEL_NUM);
-			var q = new Quad(Startup.stageWidth(0.25),
-			Startup.stageHeight(1/MAX_LEVELS), Color.rgb(c,c,c));
-			addChild(q);
-			buttons.push(q);
-
-			var t = new GameText(Std.int(q.width),
-			Std.int(q.height), GameLevel.getName(i));
+			var t = new GameText(Std.int(Startup.stageWidth(0.25)),
+			Std.int(Startup.stageHeight(1/MAX_LEVELS)), GameLevel.getName(i));
+			t.setColor(Color.rgb(c,c,c));
+			t.y = Startup.stageHeight(i/MAX_LEVELS);
+			buttons.push(t);
 			addChild(t);
-
-			q.y = t.y = Startup.stageHeight(i/MAX_LEVELS);
 		}
 
 		ctrl = Game.game.getTopCtrls();

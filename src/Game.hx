@@ -26,7 +26,7 @@ class Game extends Sprite
 		addChild(panel);
 		titleText = new GameText(title.length*50,100,title);
 		titleText.x = Startup.stageWidth(0.5) - titleText.width/2;
-		titleText.fontSize = 50; titleText.color = 0;
+		titleText.fontSize = 50;
 		addChild(titleText);
 	}
 

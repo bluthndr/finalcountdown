@@ -270,6 +270,12 @@ class Player extends GameSprite
 	{
 		if(this.getRect().intersects(wall))
 		{
+			if(image.is(WALL_JUMP))
+			{
+				if(vel.y > 0) image.setAnimation(FALL);
+				else image.setAnimation(JUMP);
+			}
+
 			if(lastRect.y <= wall.y - charHeight)
 			{
 				if(!onPlatform() && vel.y > 0)
@@ -510,13 +516,20 @@ class Player extends GameSprite
 		makeLimbs();
 	}
 
+	private function notOpposite(a : DIRECTION, b : DIRECTION) : Bool
+	{
+		if(a == LEFT) return b != RIGHT;
+		else if(a == RIGHT) return b != LEFT;
+		else return false;
+	}
+
 	private function jump()
 	{
 		if(!attacking && !isStunned() && !jumpHeld)
 		{
-			if(image.is(STICK) && wallDir == dirHeld)
+			if(image.is(STICK) && notOpposite(wallDir, dirHeld))
 			{
-				vel.x = speed * (dirHeld == LEFT ? -1 : 1);
+				vel.x = speed * (wallDir == LEFT ? -1 : 1);
 				vel.y = jumpHeight * 1.25;
 				platOn = null;
 				jumpHeld = true;
