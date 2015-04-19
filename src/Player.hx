@@ -32,6 +32,7 @@ class Player extends GameSprite
 	private var respawn : Int;
 	private var jumpHeight : Float;
 	private var attacking : Bool;
+	public var playerID : UInt;
 
 	private var blockLength : Int;
 	private var blockImage : HitCircle;
@@ -61,6 +62,9 @@ class Player extends GameSprite
 	public static var hAir : AttackProperties = {damage : 10,
 	knockback : new Point(0.0, -1.4), stun : 300, ivFrames : 15};
 
+	private var score : Int;
+	private var lastHitBy : Player;
+
 	public function new(p : PlayerPanel, i : UInt = 0)
 	{
 		super();
@@ -75,7 +79,8 @@ class Player extends GameSprite
 		color = p.getColor();
 		jumpHeight = -30;
 
-		meter = new PlayerMeter(this, i);
+		meter = new PlayerMeter(this, i++);
+		playerID = i;
 		image = new PlayerImage(color);
 		addChild(image);
 
@@ -281,7 +286,7 @@ class Player extends GameSprite
 				if(!onPlatform() && vel.y > 0)
 				{
 					if(isStunned() && magnitude() > GameSprite.HIGH_BOUNCE_BOUND)
-						makeLimbs();
+						kill();
 					else
 					{
 						y = wall.y - charHeight;
@@ -306,7 +311,7 @@ class Player extends GameSprite
 					if(isStunned())
 					{
 						if(magnitude() <= GameSprite.HIGH_BOUNCE_BOUND) vel.y *= -1;
-						else makeLimbs();
+						else kill();
 					}
 					else
 					{
@@ -325,7 +330,7 @@ class Player extends GameSprite
 					if(isStunned())
 					{
 						if(magnitude() <= GameSprite.HIGH_BOUNCE_BOUND) vel.x *= -1;
-						else makeLimbs();
+						else kill();
 					}
 					else
 					{
@@ -341,7 +346,7 @@ class Player extends GameSprite
 					if(isStunned())
 					{
 						if(magnitude() <= GameSprite.HIGH_BOUNCE_BOUND) vel.x *= -1;
-						else makeLimbs();
+						else kill();
 					}
 					else
 					{
@@ -415,6 +420,7 @@ class Player extends GameSprite
 				};
 				if(isBlocking()) attacker.takeDamage(damage, attacker.image.scaleX > 0);
 				else takeDamage(damage, attacker.image.scaleX < 0);
+				lastHitBy = attacker;
 				return true;
 			}
 		}
@@ -503,17 +509,27 @@ class Player extends GameSprite
 		limbs.push(leftShoe);
 		limbs.push(leftHand);
 		cast(parent, Level).addLimbs(limbs);
-		dead = true; respawn = 240;
+		dead = true; respawn = 180;
 		visible = false; platOn = null;
 	}
 
 	public function kill()
 	{
-		/*
-			Add functions later that will decreases score
-			or lives depending on the game type
-		*/
 		makeLimbs();
+		parent.dispatchEvent(new PlayerDiedEvent(this,lastHitBy));
+	}
+
+	public function fatalKill() : PlayerMeter
+	{
+		Game.game.removeChild(meter);
+		return meter;
+	}
+
+	public function updateScore(addScore : Bool)
+	{
+		if(addScore) ++score;
+		else --score;
+		meter.updateText(score);
 	}
 
 	private function notOpposite(a : DIRECTION, b : DIRECTION) : Bool
@@ -754,6 +770,9 @@ class Player extends GameSprite
 		endAttack();
 		if(ivLength <= 0) ivLength = att.ivFrames;
 	}
+
+	public inline function getScore() : Int
+	{	return score;}
 
 	public function toString() : String
 	{

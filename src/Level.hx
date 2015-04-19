@@ -3,6 +3,13 @@ import starling.events.*;
 import flash.ui.*;
 import flash.geom.*;
 
+enum GAME_TYPE
+{
+	STOCK;
+	TIME;
+}
+
+typedef GameConditions = {type : GAME_TYPE, goal : Float}
 class Level extends Sprite
 {
 	private var sprites : Array<GameSprite>;
@@ -13,16 +20,20 @@ class Level extends Sprite
 	private var showFPS : Bool;
 	private var frameCount : UInt;
 	private var timePassed : Float;
+	private var conditions : GameConditions;
 
 	private inline static var pregameText =
 	"Game will begin in: ";
 
-	public function new(map : LevelMap, players : Array<GameSprite>)
+	private static var defaultCond : GameConditions = {type : TIME, goal : 30000};
+
+	public function new(map : LevelMap, players : Array<GameSprite>, ?t : GameConditions)
 	{
 		super();
 
 		sprites = players;
 		level = map;
+		conditions = t == null ? defaultCond : t;
 
 		camera = new Camera(level.minX, level.minY, map.width, map.height);
 
@@ -61,7 +72,14 @@ class Level extends Sprite
 		removeEventListener(Event.ENTER_FRAME, countdown);
 
 		addEventListener(Event.ENTER_FRAME, update);
+		addEventListener(PlayerDiedEvent.DEATH, updateScore);
 		addEventListener(KeyboardEvent.KEY_UP, debugFunc);
+		if(conditions.type == TIME)
+		{
+			var timer = new flash.utils.Timer(conditions.goal, 1);
+			timer.start();
+			timer.addEventListener(flash.events.TimerEvent.TIMER_COMPLETE, endGame);
+		}
 	}
 
 	private function loadSprites()
@@ -182,6 +200,103 @@ class Level extends Sprite
 		x = Startup.stageWidth(0.5)-(camera.x*camera.scale);
 		y = Startup.stageHeight(0.5)-(camera.y*camera.scale);
 		scaleX = scaleY = camera.scale;
+	}
+
+	private function updateScore(e : PlayerDiedEvent)
+	{
+		if(e.killer == e.victim || e.killer == null)
+		{
+			e.victim.updateScore(false);
+			if(conditions.type == STOCK && Math.abs(e.victim.getScore()) == conditions.goal)
+			{
+				removeChild(e.victim);
+				sprites.remove(e.victim);
+				meters.remove(e.victim.fatalKill());
+				if(playerCount() <= 1)
+					endGame();
+			}
+		}
+		else
+		{
+			switch(conditions.type)
+			{
+				case STOCK:
+					e.victim.updateScore(false);
+					if(Math.abs(e.victim.getScore()) == conditions.goal)
+					{
+						removeChild(e.victim);
+						sprites.remove(e.victim);
+						meters.remove(e.victim.fatalKill());
+						if(playerCount() <= 1)
+							endGame();
+					}
+				case TIME:
+					e.victim.updateScore(false);
+					e.killer.updateScore(true);
+			}
+		}
+	}
+
+	private function playerCount() : UInt
+	{
+		var rval = 0;
+		for(sprite in sprites)
+		{
+			if(Std.is(sprite, Player)) ++rval;
+		}
+		return rval;
+	}
+
+	private function endGame(?e:Dynamic)
+	{
+		var p = findWinner();
+		var g = new GameText(100,100,"Player #" + p.playerID + " wins!");
+		g.alignPivot();
+		g.x = Startup.stageWidth(0.5);
+		g.y = Startup.stageHeight(0.5);
+		Game.game.addChild(g);
+		removeEventListener(PlayerDiedEvent.DEATH, updateScore);
+		addEventListener(Event.ENTER_FRAME, gameOver);
+		timePassed = 0;
+	}
+
+	private function gameOver(e : EnterFrameEvent)
+	{
+		timePassed += e.passedTime;
+		if(timePassed > 3) Game.game.reset();
+	}
+
+	private function findWinner() : Player
+	{
+		var rval : Player = null;
+		switch(conditions.type)
+		{
+			case STOCK:
+				for(sprite in sprites)
+				{
+					if(Std.is(sprite, Player))
+					{
+						rval = cast(sprite, Player);
+						break;
+					}
+				}
+			case TIME:
+				var highScore = -0xffffff;
+				for(sprite in sprites)
+				{
+					try
+					{
+						var cur = cast(sprite, Player);
+						if(highScore < cur.getScore())
+						{
+							highScore = cur.getScore();
+							rval = cur;
+						}
+					}
+					catch(d:Dynamic){continue;}
+				}
+		}
+		return rval;
 	}
 
 	private function debugFunc(e:KeyboardEvent)
