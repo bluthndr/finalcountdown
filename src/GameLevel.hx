@@ -2,7 +2,7 @@ import LevelEditor;
 
 class GameLevel extends LevelMap
 {
-	public static inline var LEVEL_NUM = 4;
+	public static inline var LEVEL_NUM = 6;
 
 	public function new(index : UInt = 0)
 	{
@@ -14,9 +14,11 @@ class GameLevel extends LevelMap
 	{
 		return switch(index % LEVEL_NUM)
 		{
-			case 1: "Battlefield";
-			case 2: "Big Battlefield";
-			case 3: "Fire Pit";
+			case 1: "Big Cage";
+			case 2: "Battlefield";
+			case 3: "Big Battlefield";
+			case 4: "Fire Pit";
+			case 5: "Castle";
 			default: "Cage";
 		}
 	}
@@ -25,10 +27,12 @@ class GameLevel extends LevelMap
 	{
 		return switch(index % LEVEL_NUM)
 		{
-			case 1: Battlefield();
-			case 2: BigBattlefield();
-			case 3: Norfair();
-			default: FinalDestination();
+			case 1: BigCage();
+			case 2: Battlefield();
+			case 3: BigBattlefield();
+			case 4: FirePit();
+			case 5: Castle();
+			default: Cage();
 		}
 	}
 
@@ -75,7 +79,7 @@ class GameLevel extends LevelMap
 				{x : 640, y : 320, w : 64, h : 64, type : 10}];
 	}
 
-	private static function FinalDestination() : Array<Placeable>
+	private static function Cage() : Array<Placeable>
 	{
 		return [{x : 0, y : 0, w : 64, h : 640, type : 0},
 			{x : 576, y : 0, w : 64, h : 640, type : 0},
@@ -91,7 +95,23 @@ class GameLevel extends LevelMap
 			{x : 320, y : 448, w : 64, h : 64, type : 10}];
 	}
 
-	private static function Norfair() : Array<Placeable>
+	private static function BigCage() : Array<Placeable>
+	{
+		return [{x : 0, y : 0, w : 64, h : 640, type : 0},
+				{x : 1216, y : 0, w : 64, h : 640, type : 0},
+				{x : 0, y : -64, w : 1280, h : 64, type : 0},
+				{x : 0, y : 640, w : 1280, h : 64, type : 0},
+				{x : 128, y : 512, w : 64, h : 64, type : 3},
+				{x : 1088, y : 512, w : 64, h : 64, type : 4},
+				{x : 256, y : 512, w : 64, h : 64, type : 5},
+				{x : 960, y : 512, w : 64, h : 64, type : 6},
+				{x : 384, y : 512, w : 64, h : 64, type : 7},
+				{x : 832, y : 512, w : 64, h : 64, type : 8},
+				{x : 512, y : 512, w : 64, h : 64, type : 9},
+				{x : 704, y : 512, w : 64, h : 64, type : 10}];
+	}
+
+	private static function FirePit() : Array<Placeable>
 	{
 		return [{x : 0, y : 0, w : 64, h : 640, type : 2},
 				{x : 64, y : 256, w : 192, h : 64, type : 0},
@@ -113,5 +133,33 @@ class GameLevel extends LevelMap
 				{x : 704, y : 256, w : 64, h : 64, type : 8},
 				{x : 512, y : 128, w : 64, h : 64, type : 9},
 				{x : 512, y : 384, w : 64, h : 64, type : 10}];
+	}
+
+	private static function Castle() : Array<Placeable>
+	{
+		return [{x : 0, y : 192, w : 64, h : 384, type : 0},
+				{x : 128, y : 384, w : 192, h : 64, type : 1},
+				{x : 448, y : 384, w : 192, h : 64, type : 1},
+				{x : 640, y : 64, w : 192, h : 512, type : 0},
+				{x : 256, y : 128, w : 256, h : 64, type : 1},
+				{x : -128, y : 576, w : 128, h : 64, type : 2},
+				{x : -192, y : -320, w : 64, h : 960, type : 0},
+				{x : 960, y : 128, w : 256, h : 64, type : 1},
+				{x : 832, y : 384, w : 192, h : 64, type : 1},
+				{x : 1152, y : 384, w : 192, h : 64, type : 1},
+				{x : 1344, y : 192, w : 64, h : 384, type : 0},
+				{x : 0, y : 576, w : 1408, h : 64, type : 0},
+				{x : 1408, y : 576, w : 128, h : 64, type : 2},
+				{x : 1536, y : -320, w : 64, h : 960, type : 0},
+				{x : -192, y : -384, w : 1792, h : 64, type : 0},
+				{x : 192, y : 256, w : 64, h : 64, type : 3},
+				{x : 1216, y : 256, w : 64, h : 64, type : 4},
+				{x : 512, y : 256, w : 64, h : 64, type : 5},
+				{x : 896, y : 256, w : 64, h : 64, type : 6},
+				{x : 320, y : 448, w : 64, h : 64, type : 7},
+				{x : 1088, y : 448, w : 64, h : 64, type : 8},
+				{x : 320, y : 0, w : 64, h : 64, type : 9},
+				{x : 1088, y : 0, w : 64, h : 64, type : 10},
+				];
 	}
 }

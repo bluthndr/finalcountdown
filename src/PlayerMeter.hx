@@ -5,6 +5,7 @@ class PlayerMeter extends Sprite
 {
 	private var damage : Float;
 	private var output : GameText;
+	private var score : Int;
 
 	public inline static var MAX_DAMAGE = 300;
 
@@ -13,26 +14,24 @@ class PlayerMeter extends Sprite
 		super();
 		damage = 0;
 
-		addChild(new Quad(100,50,p.getColor()));
-		var q = new Quad(80,30, 0);
-		q.x = q.y = 10;
-		addChild(q);
-
-		output = new GameText(100, 50, Std.string(Math.floor(damage))+"%");
+		addChild(new Quad(100,75, p.getColor()));
+		output = new GameText(80, 55, "Damage: " + Std.string(Math.floor(damage))+"%\nScore: 0");
+		output.x = 50; output.y = 37.5; output.fontSize = 10;
+		output.alignPivot();
 		output.vAlign = VAlign.CENTER;
 		output.hAlign = HAlign.CENTER;
 		addChild(output);
 
 		alpha = 0.5;
 
-		if(i < 4)
+		if(i >= 4)
 		{
-			x = Startup.stageWidth(0.25*i) + Startup.stageWidth(0.05);
-			y = Startup.stageHeight(0.9);
+			x = Startup.stageWidth(0.25*(i-4)) + Startup.stageWidth(0.05);
+			y = Startup.stageHeight() - 75;
 		}
 		else
 		{
-			x = Startup.stageWidth(0.25*(i-4)) + Startup.stageWidth(0.05);
+			x = Startup.stageWidth(0.25*i) + Startup.stageWidth(0.05);
 		}
 	}
 
@@ -57,9 +56,10 @@ class PlayerMeter extends Sprite
 		updateText();
 	}
 
-	private function updateText()
+	public function updateText(?sc : Int)
 	{
-		output.text = Std.string(Math.floor(damage)) + "%";
+		if(sc != null) score = sc;
+		output.text = "Damage: " + Std.string(Math.floor(damage)) + "%\nScore: " + Std.string(score);
 		var gb : UInt = cast(255 - damage * 255 / MAX_DAMAGE, UInt);
 		output.color = Color.rgb(255,gb,gb);
 	}

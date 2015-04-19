@@ -3,12 +3,15 @@ import starling.events.*;
 import starling.text.TextField;
 import starling.utils.Color;
 import bitmasq.*;
+import Level;
 
 class LevelSelector extends Sprite
 {
 	private var cursor : Cursor;
-	private var buttons : Array<Quad>;
+	private var buttons : Array<GameText>;
+	private var buttons2 : Array<GameText>;
 	private var ctrl : Controller;
+	private var conditions : GameConditions;
 
 	private static inline var MAX_LEVELS = 10;
 
@@ -18,30 +21,43 @@ class LevelSelector extends Sprite
 
 		var gt = new GameText(Std.int(Startup.stageWidth(0.7)),
 		Std.int(Startup.stageHeight(0.2)),"Select a stage");
-		gt.color = 0; gt.fontSize = 50;
+		gt.fontSize = 50;
 		gt.x = Startup.stageWidth(0.3); addChild(gt);
 
 		buttons = new Array();
 		for(i in 0...GameLevel.LEVEL_NUM)
 		{
 			var c = Std.int(i * 255/GameLevel.LEVEL_NUM);
-			var q = new Quad(Startup.stageWidth(0.25),
-			Startup.stageHeight(1/MAX_LEVELS), Color.rgb(c,c,c));
-			addChild(q);
-			buttons.push(q);
-
-			var t = new GameText(Std.int(q.width),
-			Std.int(q.height), GameLevel.getName(i));
+			var t = new GameText(Std.int(Startup.stageWidth(0.25)),
+			Std.int(Startup.stageHeight(1/MAX_LEVELS)), GameLevel.getName(i));
+			t.setColor(Color.rgb(c,c,c));
+			var cx = c > 0xaaaaaa ? 0 : 0xffffff;
+			t.color =Color.rgb(cx,cx,cx);
+			t.y = Startup.stageHeight(i/MAX_LEVELS);
+			buttons.push(t);
 			addChild(t);
-
-			q.y = t.y = Startup.stageHeight(i/MAX_LEVELS);
 		}
+
+		buttons2 = new Array();
+		var gameType = new GameText(Std.int(Startup.stageWidth(0.35)),
+		Std.int(Startup.stageHeight(0.1)), "Game Type: STOCK");
+		gameType.x = gt.x; gameType.y = Startup.stageHeight(0.9);
+		buttons2.push(gameType);
+		addChild(gameType);
+
+		var gameGoal = new GameText(Std.int(Startup.stageWidth(0.35)),
+		Std.int(Startup.stageHeight(0.1)), "Lives: 1");
+		gameGoal.x = gameType.x + gameType.width; gameGoal.y = gameType.y;
+		buttons2.push(gameGoal);
+		addChild(gameGoal);
 
 		ctrl = Game.game.getTopCtrls();
 		cursor = new Cursor();
 		cursor.x = Startup.stageWidth(0.5) - cursor.width;
 		cursor.y = Startup.stageHeight(0.5) - cursor.height;
 		addChild(cursor);
+
+		conditions = {type : STOCK, goal : 1};
 
 		if(ctrl.gamepad) Gamepad.get().addEventListener(GamepadEvent.CHANGE, padInput);
 		else
@@ -107,9 +123,52 @@ class LevelSelector extends Sprite
 			if(cursor.bounds.intersects(buttons[i].bounds))
 			{
 				Game.game.removeChildren();
-				Game.game.addChild(new Level(new GameLevel(i), Game.game.getPlayers()));
-				break;
+				Game.game.addChild(new Level(new GameLevel(i), Game.game.getPlayers(), conditions));
+				return;
 			}
 		}
+		if(cursor.bounds.intersects(buttons2[1].bounds))
+		{
+			switch(conditions.type)
+			{
+				case STOCK:
+					if(++conditions.goal > 10)
+						conditions.goal = 1;
+				case TIME:
+					conditions.goal += 30000;
+					if(conditions.goal > 300000)
+						conditions.goal = 30000;
+			}
+			updateText();
+		}
+		else if(cursor.bounds.intersects(buttons2[0].bounds))
+		{
+			switch(conditions.type)
+			{
+				case STOCK:
+					conditions.type = TIME;
+					conditions.goal = 30000;
+				case TIME:
+					conditions.type = STOCK;
+					conditions.goal = 1;
+			}
+			updateText();
+		}
+	}
+
+	private function updateText()
+	{
+		buttons2[0].text = "Game Type: " + switch(conditions.type)
+		{
+			case STOCK: "STOCK";
+			case TIME: "TIME";
+		};
+		buttons2[1].text = switch(conditions.type)
+		{
+			case STOCK: "Lives: " + conditions.goal;
+			case TIME: "Time " + Math.floor(conditions.goal / 60000) + ":" +
+						Math.floor((conditions.goal % 60000) / 1000);
+		};
+		if(StringTools.endsWith(buttons2[1].text, ":0")) buttons2[1].text += "0";
 	}
 }

@@ -3,39 +3,89 @@ import starling.events.*;
 import flash.ui.*;
 import flash.geom.*;
 
+enum GAME_TYPE
+{
+	STOCK;
+	TIME;
+}
+
+typedef GameConditions = {type : GAME_TYPE, goal : Float}
 class Level extends Sprite
 {
 	private var sprites : Array<GameSprite>;
 	private var meters : Array<PlayerMeter>;
 	private var level : LevelMap;
 	private var camera : Camera;
+	private var gameTimer : flash.utils.Timer;
 
 	private var showFPS : Bool;
 	private var frameCount : UInt;
 	private var timePassed : Float;
+	private var conditions : GameConditions;
 
-	public function new(map : LevelMap, players : Array<GameSprite>)
+	private inline static var pregameText =
+	"Game will begin in: ";
+
+	private static var defaultCond : GameConditions = {type : TIME, goal : 30000};
+
+	public function new(map : LevelMap, players : Array<GameSprite>, ?t : GameConditions)
 	{
 		super();
 
-		camera = new Camera(map.width, map.height);
-
 		sprites = players;
 		level = map;
+		conditions = t == null ? defaultCond : t;
 
-		addEventListener(Event.ADDED_TO_STAGE, addHandler);
-		addEventListener(KeyboardEvent.KEY_UP, debugFunc);
+		camera = new Camera(level.minX, level.minY, map.width, map.height);
+
+		addEventListener(Event.ADDED_TO_STAGE, preGame);
 
 		showFPS = false;
 		frameCount = 0; timePassed = 0;
 		meters = new Array();
 	}
 
-	private function addHandler(e:Event)
+	private function preGame(e:Event)
 	{
-		removeEventListener(Event.ADDED_TO_STAGE, addHandler);
-		addEventListener(Event.ENTER_FRAME, update);
+		removeEventListener(Event.ADDED_TO_STAGE, preGame);
+		addEventListener(Event.ENTER_FRAME, countdown);
+		loadSprites();
+		var countText = new GameText(100,100,pregameText + "3");
+		countText.x = Startup.stageWidth(0.5) - countText.width/2;
+		countText.y = Startup.stageHeight(0.5) - countText.height/2;
+		countText.name = "Pregame";
+		Game.game.addChild(countText);
 
+	}
+
+	private function countdown(e:EnterFrameEvent)
+	{
+		timePassed += e.passedTime;
+		var t = cast(Game.game.getChildByName("Pregame"), GameText);
+		t.text = pregameText + Std.string(Math.ceil(-timePassed+3));
+		if(timePassed > 3) startgame();
+		moveCamera();
+	}
+
+	private function startgame()
+	{
+		Game.game.removeChild(Game.game.getChildByName("Pregame"));
+		removeEventListener(Event.ENTER_FRAME, countdown);
+
+		addEventListener(Event.ENTER_FRAME, update);
+		if(sprites.length > 1)
+			addEventListener(PlayerDiedEvent.DEATH, updateScore);
+		addEventListener(KeyboardEvent.KEY_UP, debugFunc);
+		if(conditions.type == TIME)
+		{
+			gameTimer = new flash.utils.Timer(conditions.goal, 1);
+			gameTimer.start();
+			gameTimer.addEventListener(flash.events.TimerEvent.TIMER_COMPLETE, endGame);
+		}
+	}
+
+	private function loadSprites()
+	{
 		//add all children to level
 		addChild(level);
 		for(i in 0...sprites.length)
@@ -46,7 +96,7 @@ class Level extends Sprite
 			camera.y += sprites[i].y;
 			addChild(sprites[i]);
 		}
-		moveCamera();
+
 		//for(i in 0...numChildren) trace(getChildAt(i));
 	}
 
@@ -63,6 +113,7 @@ class Level extends Sprite
 				frameCount = 0; timePassed = 0;
 			}
 		}
+
 		//movement and collision detection
 		for(sprite in sprites)
 		{
@@ -146,12 +197,112 @@ class Level extends Sprite
 		avg.x /= plyNum;
 		avg.y /= plyNum;
 
-		camera.move(avg, positions);
+		if(plyNum > 0)
+		{
+			camera.move(avg, positions);
 
-		//move and scale level
-		x = Startup.stageWidth(0.5)-(camera.x*camera.scale);
-		y = Startup.stageHeight(0.5)-(camera.y*camera.scale);
-		scaleX = scaleY = camera.scale;
+			//move and scale level
+			x = Startup.stageWidth(0.5)-(camera.x*camera.scale);
+			y = Startup.stageHeight(0.5)-(camera.y*camera.scale);
+			scaleX = scaleY = camera.scale;
+		}
+	}
+
+	private function updateScore(e : PlayerDiedEvent)
+	{
+		if(e.killer == e.victim || e.killer == null)
+		{
+			e.victim.updateScore(false);
+			if(conditions.type == STOCK && Math.abs(e.victim.getScore()) == conditions.goal)
+			{
+				removeChild(e.victim);
+				sprites.remove(e.victim);
+				meters.remove(e.victim.fatalKill());
+				if(playerCount() <= 1)
+					endGame();
+			}
+		}
+		else
+		{
+			switch(conditions.type)
+			{
+				case STOCK:
+					e.victim.updateScore(false);
+					if(Math.abs(e.victim.getScore()) == conditions.goal)
+					{
+						removeChild(e.victim);
+						sprites.remove(e.victim);
+						meters.remove(e.victim.fatalKill());
+						if(playerCount() <= 1)
+							endGame();
+					}
+				case TIME:
+					e.victim.updateScore(false);
+					e.killer.updateScore(true);
+			}
+		}
+	}
+
+	private function playerCount() : UInt
+	{
+		var rval = 0;
+		for(sprite in sprites)
+		{
+			if(Std.is(sprite, Player)) ++rval;
+		}
+		return rval;
+	}
+
+	private function endGame(?e:Dynamic)
+	{
+		var p = findWinner();
+		var g = new GameText(100,100,"Player #" + p.playerID + " wins!");
+		g.alignPivot();
+		g.x = Startup.stageWidth(0.5);
+		g.y = Startup.stageHeight(0.5);
+		Game.game.addChild(g);
+		removeEventListener(PlayerDiedEvent.DEATH, updateScore);
+		addEventListener(Event.ENTER_FRAME, gameOver);
+		timePassed = 0;
+	}
+
+	private function gameOver(e : EnterFrameEvent)
+	{
+		timePassed += e.passedTime;
+		if(timePassed > 3) Game.game.reset();
+	}
+
+	private function findWinner() : Player
+	{
+		var rval : Player = null;
+		switch(conditions.type)
+		{
+			case STOCK:
+				for(sprite in sprites)
+				{
+					if(Std.is(sprite, Player))
+					{
+						rval = cast(sprite, Player);
+						break;
+					}
+				}
+			case TIME:
+				var highScore = -0xffffff;
+				for(sprite in sprites)
+				{
+					try
+					{
+						var cur = cast(sprite, Player);
+						if(highScore < cur.getScore())
+						{
+							highScore = cur.getScore();
+							rval = cur;
+						}
+					}
+					catch(d:Dynamic){continue;}
+				}
+		}
+		return rval;
 	}
 
 	private function debugFunc(e:KeyboardEvent)
@@ -234,37 +385,29 @@ class Camera
 	public var scale : Float;
 	public var lowBound : Point;
 	public var highBound : Point;
-	public inline static var cameraSpeed = 10;
 
-	public function new(w : Float, h : Float)
+	public inline static var cameraMoveSpeed = 10;
+	public inline static var cameraScaleSpeed = 0.005;
+
+	public function new(mx : Float, my : Float, w : Float, h : Float)
 	{
 		scale = 1;
-		lowBound = new Point(Startup.stageWidth(0.5),Startup.stageHeight(0.5));
+		lowBound = new Point(mx + Startup.stageWidth(0.5), my + Startup.stageHeight(0.5));
 		highBound = new Point(w - lowBound.x, h - lowBound.y);
 		x = lowBound.x; y = lowBound.y;
 	}
 
-	public function getRect(?sc : Float) : Rectangle
+	public function getRect() : Rectangle
 	{
-		if(sc != null)
-		{
-			var scales = new Point(Startup.stageWidth(1/sc),Startup.stageHeight(1/sc));
-			var nx = x - Startup.stageWidth(0.5/sc);
-			var ny = y - Startup.stageHeight(0.5/sc);
-			return new Rectangle(nx, ny, scales.x, scales.y);
-		}
-		else
-		{
-			var scales = new Point(Startup.stageWidth(1/scale),Startup.stageHeight(1/scale));
-			var nx = x - Startup.stageWidth(0.5/scale);
-			var ny = y - Startup.stageHeight(0.5/scale);
-			return new Rectangle(nx, ny, scales.x, scales.y);
-		}
+		var scales = new Point(Startup.stageWidth(1/scale),Startup.stageHeight(1/scale));
+		var nx = x - Startup.stageWidth(0.5/scale);
+		var ny = y - Startup.stageHeight(0.5/scale);
+		return new Rectangle(nx, ny, scales.x, scales.y);
 	}
 
-	public function allOnScreen(points : Array<Point>, ?sc : Float) : Bool
+	public function allOnScreen(points : Array<Point>) : Bool
 	{
-		var rect = getRect(sc == null ? scale : sc);
+		var rect = getRect();
 		for(p in points)
 		{
 			if(!rect.containsPoint(p))
@@ -276,10 +419,12 @@ class Camera
 	public function move(center : Point, positions : Array<Point>)
 	{
 		//move camera
-		if(x < center.x - cameraSpeed*2) x += cameraSpeed;
-		else if(x > center.x + cameraSpeed*2) x -= cameraSpeed;
-		if(y < center.y - cameraSpeed*2) y += cameraSpeed;
-		else if(y > center.y + cameraSpeed*2) y -= cameraSpeed;
+		if(x < center.x - cameraMoveSpeed*2) x += cameraMoveSpeed;
+		else if(x > center.x + cameraMoveSpeed*2) x -= cameraMoveSpeed;
+		else x = center.x;
+		if(y < center.y - cameraMoveSpeed*2) y += cameraMoveSpeed;
+		else if(y > center.y + cameraMoveSpeed*2) y -= cameraMoveSpeed;
+		else y = center.y;
 
 		//bound camera
 		if(x < lowBound.x) x = lowBound.x;
@@ -288,10 +433,15 @@ class Camera
 		else if(y > highBound.y) y = highBound.y;
 
 		//find scale
-		var newScale : Float = 1;
-		while(!allOnScreen(positions, newScale) && newScale > 0.01) newScale -= 0.01;
-		if(scale < newScale - 0.05) scale += 0.01;
-		else if(scale > newScale + 0.05) scale -= 0.01;
-		else scale = newScale;
+		var cond = !allOnScreen(positions);
+		if(cond)
+		{
+			do{scale -= cameraScaleSpeed;}while(!allOnScreen(positions));
+		}
+		else if(scale < 1)
+		{
+			scale += cameraScaleSpeed;
+			if(!allOnScreen(positions)) scale -= cameraScaleSpeed;
+		}
 	}
 }

@@ -32,6 +32,7 @@ class Player extends GameSprite
 	private var respawn : Int;
 	private var jumpHeight : Float;
 	private var attacking : Bool;
+	public var playerID : UInt;
 
 	private var blockLength : Int;
 	private var blockImage : HitCircle;
@@ -61,6 +62,9 @@ class Player extends GameSprite
 	public static var hAir : AttackProperties = {damage : 10,
 	knockback : new Point(0.0, -1.4), stun : 300, ivFrames : 15};
 
+	private var score : Int;
+	private var lastHitBy : Player;
+
 	public function new(p : PlayerPanel, i : UInt = 0)
 	{
 		super();
@@ -75,7 +79,8 @@ class Player extends GameSprite
 		color = p.getColor();
 		jumpHeight = -30;
 
-		meter = new PlayerMeter(this, i);
+		meter = new PlayerMeter(this, i++);
+		playerID = i;
 		image = new PlayerImage(color);
 		addChild(image);
 
@@ -270,12 +275,18 @@ class Player extends GameSprite
 	{
 		if(this.getRect().intersects(wall))
 		{
+			if(image.is(WALL_JUMP))
+			{
+				if(vel.y > 0) image.setAnimation(FALL);
+				else image.setAnimation(JUMP);
+			}
+
 			if(lastRect.y <= wall.y - charHeight)
 			{
 				if(!onPlatform() && vel.y > 0)
 				{
 					if(isStunned() && magnitude() > GameSprite.HIGH_BOUNCE_BOUND)
-						makeLimbs();
+						kill();
 					else
 					{
 						y = wall.y - charHeight;
@@ -300,7 +311,7 @@ class Player extends GameSprite
 					if(isStunned())
 					{
 						if(magnitude() <= GameSprite.HIGH_BOUNCE_BOUND) vel.y *= -1;
-						else makeLimbs();
+						else kill();
 					}
 					else
 					{
@@ -311,15 +322,15 @@ class Player extends GameSprite
 			}
 			else
 			{
-				var centerX = wall.x + wall.width/2;
-				if(vel.x >= 0 && lastRect.x < centerX)
+				//var centerX = wall.x + wall.width/2;
+				if(vel.x >= 0 && lastRect.x <= wall.x)
 				{
 					/*haxe.Log.clear();
 					trace("Left Collision!", x, y , wall.x, wall.y);*/
 					if(isStunned())
 					{
 						if(magnitude() <= GameSprite.HIGH_BOUNCE_BOUND) vel.x *= -1;
-						else makeLimbs();
+						else kill();
 					}
 					else
 					{
@@ -328,14 +339,14 @@ class Player extends GameSprite
 						wallDir = LEFT;
 					}
 				}
-				else if(vel.x <= 0 && lastRect.x > centerX)
+				else if(vel.x <= 0 && lastRect.x > wall.x)
 				{
 					/*haxe.Log.clear();
 					trace("Right Collision!", x, y , wall.x, wall.y);*/
 					if(isStunned())
 					{
 						if(magnitude() <= GameSprite.HIGH_BOUNCE_BOUND) vel.x *= -1;
-						else makeLimbs();
+						else kill();
 					}
 					else
 					{
@@ -409,6 +420,7 @@ class Player extends GameSprite
 				};
 				if(isBlocking()) attacker.takeDamage(damage, attacker.image.scaleX > 0);
 				else takeDamage(damage, attacker.image.scaleX < 0);
+				lastHitBy = attacker;
 				return true;
 			}
 		}
@@ -434,13 +446,13 @@ class Player extends GameSprite
 				{
 					if(x < attacker.x)
 					{
-						--x;
-						++attacker.x;
+						if(wallDir != RIGHT) --x;
+						if(attacker.wallDir != LEFT) ++attacker.x;
 					}
 					else
 					{
-						++x;
-						--attacker.x;
+						if(wallDir != RIGHT) ++x;
+						if(attacker.wallDir != LEFT) --attacker.x;
 					}
 				}
 			}
@@ -451,7 +463,7 @@ class Player extends GameSprite
 
 	private function makeLimbs()
 	{
-		trace("Died at the speed: " + magnitude());
+		//trace("Died at the speed: " + magnitude());
 		var limbs = new Array<PlayerLimb>();
 
 		var rightEye = new PlayerLimb("eye", PlayerImage.deg2rad(120));
@@ -497,26 +509,43 @@ class Player extends GameSprite
 		limbs.push(leftShoe);
 		limbs.push(leftHand);
 		cast(parent, Level).addLimbs(limbs);
-		dead = true; respawn = 240;
+		dead = true; respawn = 180;
 		visible = false; platOn = null;
 	}
 
 	public function kill()
 	{
-		/*
-			Add functions later that will decreases score
-			or lives depending on the game type
-		*/
 		makeLimbs();
+		parent.dispatchEvent(new PlayerDiedEvent(this,lastHitBy));
+	}
+
+	public function fatalKill() : PlayerMeter
+	{
+		Game.game.removeChild(meter);
+		return meter;
+	}
+
+	public function updateScore(addScore : Bool)
+	{
+		if(addScore) ++score;
+		else --score;
+		meter.updateText(score);
+	}
+
+	private function notOpposite(a : DIRECTION, b : DIRECTION) : Bool
+	{
+		if(a == LEFT) return b != RIGHT;
+		else if(a == RIGHT) return b != LEFT;
+		else return false;
 	}
 
 	private function jump()
 	{
 		if(!attacking && !isStunned() && !jumpHeld)
 		{
-			if(image.is(STICK) && wallDir == dirHeld)
+			if(image.is(STICK) && notOpposite(wallDir, dirHeld))
 			{
-				vel.x = speed * (dirHeld == LEFT ? -1 : 1);
+				vel.x = speed * (wallDir == LEFT ? -1 : 1);
 				vel.y = jumpHeight * 1.25;
 				platOn = null;
 				jumpHeld = true;
@@ -741,6 +770,9 @@ class Player extends GameSprite
 		endAttack();
 		if(ivLength <= 0) ivLength = att.ivFrames;
 	}
+
+	public inline function getScore() : Int
+	{	return score;}
 
 	public function toString() : String
 	{

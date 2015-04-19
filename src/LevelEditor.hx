@@ -27,20 +27,7 @@ class LevelEditor extends Sprite
 	{
 		super();
 
-		placeable =	//new Array();
-		[{x : 0, y : 0, w : 64, h : 640, type : 2},
-		{x : 64, y : 256, w : 192, h : 64, type : 0},
-		{x : 256, y : 384, w : 192, h : 64, type : 0},
-		{x : 448, y : 512, w : 192, h : 64, type : 0},
-		{x : 640, y : 384, w : 192, h : 64, type : 0},
-		{x : 832, y : 256, w : 192, h : 64, type : 0},
-		{x : 1024, y : 0, w : 64, h : 640, type : 2},
-		{x : 0, y : -64, w : 1088, h : 64, type : 2},
-		{x : 64, y : 576, w : 960, h : 64, type : 2},
-		{x : 832, y : 512, w : 192, h : 64, type : 0},
-		{x : 64, y : 512, w : 192, h : 64, type : 0},
-];
-
+		placeable =	new Array();
 		for(place in placeable)
 		{
 			var q = new Quad(place.w, place.h, getColor(place));
