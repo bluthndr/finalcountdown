@@ -322,8 +322,8 @@ class Player extends GameSprite
 			}
 			else
 			{
-				var centerX = wall.x + wall.width/2;
-				if(vel.x >= 0 && lastRect.x < centerX)
+				//var centerX = wall.x + wall.width/2;
+				if(vel.x >= 0 && lastRect.x <= wall.x)
 				{
 					/*haxe.Log.clear();
 					trace("Left Collision!", x, y , wall.x, wall.y);*/
@@ -339,7 +339,7 @@ class Player extends GameSprite
 						wallDir = LEFT;
 					}
 				}
-				else if(vel.x <= 0 && lastRect.x > centerX)
+				else if(vel.x <= 0 && lastRect.x > wall.x)
 				{
 					/*haxe.Log.clear();
 					trace("Right Collision!", x, y , wall.x, wall.y);*/
@@ -446,13 +446,13 @@ class Player extends GameSprite
 				{
 					if(x < attacker.x)
 					{
-						--x;
-						++attacker.x;
+						if(wallDir != RIGHT) --x;
+						if(attacker.wallDir != LEFT) ++attacker.x;
 					}
 					else
 					{
-						++x;
-						--attacker.x;
+						if(wallDir != RIGHT) ++x;
+						if(attacker.wallDir != LEFT) --attacker.x;
 					}
 				}
 			}
@@ -463,7 +463,7 @@ class Player extends GameSprite
 
 	private function makeLimbs()
 	{
-		trace("Died at the speed: " + magnitude());
+		//trace("Died at the speed: " + magnitude());
 		var limbs = new Array<PlayerLimb>();
 
 		var rightEye = new PlayerLimb("eye", PlayerImage.deg2rad(120));

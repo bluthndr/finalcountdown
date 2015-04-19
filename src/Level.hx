@@ -16,6 +16,7 @@ class Level extends Sprite
 	private var meters : Array<PlayerMeter>;
 	private var level : LevelMap;
 	private var camera : Camera;
+	private var gameTimer : flash.utils.Timer;
 
 	private var showFPS : Bool;
 	private var frameCount : UInt;
@@ -72,13 +73,14 @@ class Level extends Sprite
 		removeEventListener(Event.ENTER_FRAME, countdown);
 
 		addEventListener(Event.ENTER_FRAME, update);
-		addEventListener(PlayerDiedEvent.DEATH, updateScore);
+		if(sprites.length > 1)
+			addEventListener(PlayerDiedEvent.DEATH, updateScore);
 		addEventListener(KeyboardEvent.KEY_UP, debugFunc);
 		if(conditions.type == TIME)
 		{
-			var timer = new flash.utils.Timer(conditions.goal, 1);
-			timer.start();
-			timer.addEventListener(flash.events.TimerEvent.TIMER_COMPLETE, endGame);
+			gameTimer = new flash.utils.Timer(conditions.goal, 1);
+			gameTimer.start();
+			gameTimer.addEventListener(flash.events.TimerEvent.TIMER_COMPLETE, endGame);
 		}
 	}
 
@@ -111,6 +113,7 @@ class Level extends Sprite
 				frameCount = 0; timePassed = 0;
 			}
 		}
+
 		//movement and collision detection
 		for(sprite in sprites)
 		{
@@ -194,12 +197,15 @@ class Level extends Sprite
 		avg.x /= plyNum;
 		avg.y /= plyNum;
 
-		camera.move(avg, positions);
+		if(plyNum > 0)
+		{
+			camera.move(avg, positions);
 
-		//move and scale level
-		x = Startup.stageWidth(0.5)-(camera.x*camera.scale);
-		y = Startup.stageHeight(0.5)-(camera.y*camera.scale);
-		scaleX = scaleY = camera.scale;
+			//move and scale level
+			x = Startup.stageWidth(0.5)-(camera.x*camera.scale);
+			y = Startup.stageHeight(0.5)-(camera.y*camera.scale);
+			scaleX = scaleY = camera.scale;
+		}
 	}
 
 	private function updateScore(e : PlayerDiedEvent)
@@ -379,7 +385,9 @@ class Camera
 	public var scale : Float;
 	public var lowBound : Point;
 	public var highBound : Point;
-	public inline static var cameraSpeed = 10;
+
+	public inline static var cameraMoveSpeed = 10;
+	public inline static var cameraScaleSpeed = 0.005;
 
 	public function new(mx : Float, my : Float, w : Float, h : Float)
 	{
@@ -389,27 +397,17 @@ class Camera
 		x = lowBound.x; y = lowBound.y;
 	}
 
-	public function getRect(?sc : Float) : Rectangle
+	public function getRect() : Rectangle
 	{
-		if(sc != null)
-		{
-			var scales = new Point(Startup.stageWidth(1/sc),Startup.stageHeight(1/sc));
-			var nx = x - Startup.stageWidth(0.5/sc);
-			var ny = y - Startup.stageHeight(0.5/sc);
-			return new Rectangle(nx, ny, scales.x, scales.y);
-		}
-		else
-		{
-			var scales = new Point(Startup.stageWidth(1/scale),Startup.stageHeight(1/scale));
-			var nx = x - Startup.stageWidth(0.5/scale);
-			var ny = y - Startup.stageHeight(0.5/scale);
-			return new Rectangle(nx, ny, scales.x, scales.y);
-		}
+		var scales = new Point(Startup.stageWidth(1/scale),Startup.stageHeight(1/scale));
+		var nx = x - Startup.stageWidth(0.5/scale);
+		var ny = y - Startup.stageHeight(0.5/scale);
+		return new Rectangle(nx, ny, scales.x, scales.y);
 	}
 
-	public function allOnScreen(points : Array<Point>, ?sc : Float) : Bool
+	public function allOnScreen(points : Array<Point>) : Bool
 	{
-		var rect = getRect(sc == null ? scale : sc);
+		var rect = getRect();
 		for(p in points)
 		{
 			if(!rect.containsPoint(p))
@@ -421,10 +419,12 @@ class Camera
 	public function move(center : Point, positions : Array<Point>)
 	{
 		//move camera
-		if(x < center.x - cameraSpeed*2) x += cameraSpeed;
-		else if(x > center.x + cameraSpeed*2) x -= cameraSpeed;
-		if(y < center.y - cameraSpeed*2) y += cameraSpeed;
-		else if(y > center.y + cameraSpeed*2) y -= cameraSpeed;
+		if(x < center.x - cameraMoveSpeed*2) x += cameraMoveSpeed;
+		else if(x > center.x + cameraMoveSpeed*2) x -= cameraMoveSpeed;
+		else x = center.x;
+		if(y < center.y - cameraMoveSpeed*2) y += cameraMoveSpeed;
+		else if(y > center.y + cameraMoveSpeed*2) y -= cameraMoveSpeed;
+		else y = center.y;
 
 		//bound camera
 		if(x < lowBound.x) x = lowBound.x;
@@ -433,10 +433,15 @@ class Camera
 		else if(y > highBound.y) y = highBound.y;
 
 		//find scale
-		var newScale : Float = 1;
-		while(!allOnScreen(positions, newScale) && newScale > 0.01) newScale -= 0.01;
-		if(scale < newScale - 0.05) scale += 0.01;
-		else if(scale > newScale + 0.05) scale -= 0.01;
-		else scale = newScale;
+		var cond = !allOnScreen(positions);
+		if(cond)
+		{
+			do{scale -= cameraScaleSpeed;}while(!allOnScreen(positions));
+		}
+		else if(scale < 1)
+		{
+			scale += cameraScaleSpeed;
+			if(!allOnScreen(positions)) scale -= cameraScaleSpeed;
+		}
 	}
 }
