@@ -69,7 +69,7 @@ class Startup extends Sprite
 	{
 		Starling.juggler.tween(loadingBitmap, 1.0,
 		{
-			transition:Transitions.EASE_OUT, delay:0, alpha: 0,
+			transition:Transitions.EASE_IN, delay: 1.0, alpha: 0,
 			onComplete : function()
 			{
 				removeChild(loadingBitmap);
