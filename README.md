@@ -9,33 +9,31 @@ Default Controls
 Player 1
 LEFT - Left Arrow
 RIGHT - Right Arrow
-UP - Up Arrow
+JUMP - Up Arrow
 DOWN - Down Arrow
-JUMP - Space Bar
-ATTACK* - Enter
+LIGHT ATTACK - SHIFT
+HEAVY ATTACK - CTRL
 
 Player 2
 LEFT - A
 RIGHT - D
-UP - W
+JUMP - W
 DOWN - S
-JUMP - Q
-ATTACK* - E
+LIGHT ATTACK - Q
+HEAVY ATTACK - E
 
 Player 3
 LEFT - F
 RIGHT - H
-UP - T
+JUMP - T
 DOWN - G
-JUMP - R
-ATTACK* - Y
+LIGHT ATTACK - R
+HEAVY ATTACK - Y
 
 Player 4
 LEFT - J
 RIGHT - L
-UP - I
+JUMP - I
 DOWN - K
-JUMP - U
-ATTACK* - O
-
-* = No attacks programed yet...
+LIGHT ATTACK - U
+HEAVY ATTACK - O
