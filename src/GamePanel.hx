@@ -1,7 +1,7 @@
 import starling.display.*;
 import bitmasq.*;
 import starling.events.*;
-import flash.geom.Point;
+import flash.geom.*;
 import flash.ui.*;
 import bitmasq.*;
 import GameText;
@@ -146,8 +146,14 @@ class GamePanel extends Sprite
 			if(cursor.bounds.intersects(panel.bounds))
 			{
 				panel.trigger(cursor);
-				break;
+				return;
 			}
 		}
+		var point = localToGlobal(new Point(cursor.x, cursor.y));
+		var rect = new Rectangle(point.x,point.y,cursor.width,cursor.height);
+		if(rect.intersects(new Rectangle(0,25,50,25)))
+			Game.game.dec();
+		else if(rect.intersects(new Rectangle(50,25,50,25)))
+			Game.game.inc();
 	}
 }

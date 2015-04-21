@@ -16,6 +16,8 @@ class Root extends Sprite
 		assets.enqueue("assets/fist.png");
 		assets.enqueue("assets/body.png");
 		assets.enqueue("assets/shoe.png");
+		assets.enqueue("assets/FinalGame.mp3");
+		assets.enqueue("assets/FinalGame2.mp3");
 		assets.loadQueue(function onProgress(ratio:Float)
 		{
 			if (ratio == 1)

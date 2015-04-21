@@ -124,6 +124,7 @@ class LevelSelector extends Sprite
 			{
 				Game.game.removeChildren();
 				Game.game.addChild(new Level(new GameLevel(i), Game.game.getPlayers(), conditions));
+				Game.game.play("FinalGame2");
 				return;
 			}
 		}

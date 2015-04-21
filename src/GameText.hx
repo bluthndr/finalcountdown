@@ -3,7 +3,13 @@ import starling.display.*;
 import starling.events.*;
 import starling.textures.Texture;
 
-class GameText extends TextField
+interface Bordered
+{
+	private var quad : Quad;
+	public function setColor(c : UInt) : Void;
+}
+
+class GameText extends TextField implements Bordered
 {
 	//Name of bitmap font to be used for all text
 	public inline static var bitmapFont = "Arial";
@@ -20,8 +26,10 @@ class GameText extends TextField
 	{	quad.color = c;}
 }
 
-class GameButton extends Button
+class GameButton extends Button implements Bordered
 {
+	private var quad : Quad;
+
 	public function new(w : UInt, h : UInt, s : String, fn : Void->Void)
 	{
 		super(Texture.empty(w,h), s);
@@ -29,5 +37,10 @@ class GameButton extends Button
 		fontName = GameText.bitmapFont;
 		fontSize = 20;
 		addEventListener(Event.TRIGGERED, fn);
+		quad = new Quad(w,h,0);
+		addChildAt(quad,0);
 	}
+
+	public function setColor(c : UInt)
+	{	quad.color = c;}
 }
