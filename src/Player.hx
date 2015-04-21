@@ -365,6 +365,7 @@ class Player extends GameSprite
 		{
 			if(!onPlatform() && vel.y > 0 && lastRect.y <= lava.y - charHeight)
 			{
+				Root.assets.playSound("lava");
 				var stun = meter.takeDamage(10,lavaStun);
 				if(!isStunned()) stunLength = stun;
 				vel.y = -lavaKnockback * meter.getDamage();
