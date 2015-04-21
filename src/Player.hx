@@ -365,7 +365,7 @@ class Player extends GameSprite
 		{
 			if(!onPlatform() && vel.y > 0 && lastRect.y <= lava.y - charHeight)
 			{
-				Root.assets.playSound("lava");
+				SFX.play("lava");
 				var stun = meter.takeDamage(10,lavaStun);
 				if(!isStunned()) stunLength = stun;
 				vel.y = -lavaKnockback * meter.getDamage();
@@ -374,6 +374,7 @@ class Player extends GameSprite
 			}
 			else if(vel.x >= 0 && lastRect.x <= lava.x - charWidth)
 			{
+				SFX.play("lava");
 				var stun = meter.takeDamage(10,lavaStun);
 				if(!isStunned()) stunLength = stun;
 				vel.x = -lavaKnockback * meter.getDamage();
@@ -382,6 +383,7 @@ class Player extends GameSprite
 			}
 			else if(vel.x <= 0 && lastRect.x >= lava.x + lava.width)
 			{
+				SFX.play("lava");
 				var stun = meter.takeDamage(10,lavaStun);
 				if(!isStunned()) stunLength = stun;
 				vel.x = lavaKnockback * meter.getDamage();
@@ -390,6 +392,7 @@ class Player extends GameSprite
 			}
 			else if(vel.y < 0 && lastRect.y >= lava.y + lava.height)
 			{
+				SFX.play("lava");
 				var stun = meter.takeDamage(10,lavaStun);
 				if(!isStunned()) stunLength = stun;
 				vel.y = lavaKnockback * meter.getDamage();
