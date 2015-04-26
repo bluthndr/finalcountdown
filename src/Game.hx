@@ -9,9 +9,7 @@ import flash.media.*;
 
 class Game extends Sprite
 {
-	private static inline var title = "Game";
-	private static inline var credits =
-	"Credits\n------------\nTemitope Alaga\nAdd other names later...";
+	private static inline var title = "Egg Beaters";
 
 	public static var game : Game;
 	private var titleText : GameText;
@@ -26,9 +24,10 @@ class Game extends Sprite
 		super();
 		game = this;
 
-		titleText = new GameText(title.length*50,100,title);
+		titleText = new GameText(title.length*75,100,title);
 		titleText.x = Startup.stageWidth(0.5) - titleText.width/2;
-		titleText.fontSize = 50;
+		titleText.fontSize = 75;
+		titleText.removeBorder();
 		addChild(titleText);
 
 		musButtons = new MusicButtons();
@@ -43,7 +42,7 @@ class Game extends Sprite
 		removeChildren();
 		addChild(titleText);
 
-		musButtons.play("FinalGame");
+		musButtons.play(1);
 		addChild(musButtons);
 
 		panel.reset();
@@ -64,7 +63,7 @@ class Game extends Sprite
 	public inline function getTopCtrls() : Controller
 	{	return panel.getTopCtrls();}
 
-	public function play(s : String)
+	public function play(s : Int)
 	{	musButtons.play(s);}
 
 	public function dec()
@@ -89,24 +88,24 @@ class MusicButtons extends Sprite
 	{
 		super();
 
-		sound = Root.assets.getSound("FinalGame");
+		sound = Root.assets.getSound("FinalGame1");
 		volume = 0.5;
 		isPlaying = false;
 		play();
 
-		title = new GameText(100,25);
-		title.fontSize = 10;
+		title = new GameText(150,25);
+		title.fontSize = 20;
 		updateText();
 		addChild(title);
-		decButton = new GameButton(50,25,"<",decVol);
+		decButton = new GameButton(75,25,"Decrease",decVol);
 		decButton.y = 25;
 		addChild(decButton);
-		incButton = new GameButton(50,25,">",incVol);
-		incButton.x = 50; incButton.y = decButton.y;
+		incButton = new GameButton(75,25,"Increase",incVol);
+		incButton.x = 75; incButton.y = decButton.y;
 		addChild(incButton);
 	}
 
-	public function play(?s : String)
+	public function play(?s : Int)
 	{
 		if(s == null)
 		{
@@ -130,7 +129,7 @@ class MusicButtons extends Sprite
 		{
 			channel.stop();
 			isPlaying = false;
-			sound = Root.assets.getSound(s);
+			sound = Root.assets.getSound("FinalGame"+Std.string(s));
 			play();
 		}
 	}

@@ -1,5 +1,6 @@
 import starling.display.Sprite;
 import starling.utils.AssetManager;
+import starling.text.*;
 import bitmasq.*;
 
 class Root extends Sprite
@@ -16,15 +17,19 @@ class Root extends Sprite
 		assets.enqueue("assets/fist.png");
 		assets.enqueue("assets/body.png");
 		assets.enqueue("assets/shoe.png");
-		assets.enqueue("assets/FinalGame.mp3");
+		assets.enqueue("assets/FinalGame1.mp3");
 		assets.enqueue("assets/FinalGame2.mp3");
-		assets.enqueue("assets/lavaparticle.pex");
-		assets.enqueue("assets/lavatexture.png");
+		assets.enqueue("assets/FinalGame3.mp3");
+		assets.enqueue("assets/FinalGame4.mp3");
 		assets.enqueue("assets/lava.mp3");
+		assets.enqueue("assets/EggWhite.png");
+		assets.enqueue("assets/EggWhite.fnt");
 		assets.loadQueue(function onProgress(ratio:Float)
 		{
 			if (ratio == 1)
 			{
+				var customFont = new BitmapFont(assets.getTexture("EggWhite"), assets.getXml("EggWhite"));
+				TextField.registerBitmapFont(customFont);
 				startup.init(function(){addChild(new Game());});
 			}
 		});

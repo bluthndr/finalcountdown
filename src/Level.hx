@@ -50,7 +50,7 @@ class Level extends Sprite
 		removeEventListener(Event.ADDED_TO_STAGE, preGame);
 		addEventListener(Event.ENTER_FRAME, countdown);
 		loadSprites();
-		var countText = new GameText(100,100,pregameText + "3");
+		var countText = new GameText(200,200,pregameText + "3");
 		countText.x = Startup.stageWidth(0.5) - countText.width/2;
 		countText.y = Startup.stageHeight(0.5) - countText.height/2;
 		countText.name = "Pregame";
@@ -256,7 +256,7 @@ class Level extends Sprite
 	private function endGame(?e:Dynamic)
 	{
 		var p = findWinner();
-		var g = new GameText(100,100,"Player #" + p.playerID + " wins!");
+		var g = new GameText(150,100,"Player #" + p.playerID + " wins!");
 		g.alignPivot();
 		g.x = Startup.stageWidth(0.5);
 		g.y = Startup.stageHeight(0.5);

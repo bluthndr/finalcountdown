@@ -49,7 +49,7 @@ class PlayerPanel extends Sprite
 		buttons.push(new PanelButton("<BL", decBlue,null,0x0000ff));
 		buttons.push(new PanelButton("UE>", incBlue,null,0x0000ff));
 		buttons.push(new PanelButton("Change Controls", null, changeControls));
-		buttons.push(new PanelButton("Ready: " + (ready ? "Yes" : "No"), triggerReady));
+		buttons.push(new PanelButton(ready ? "Ready!" : "Not Ready", triggerReady));
 
 		var l = buttons.length;
 		for(i in 0...l)
@@ -274,7 +274,7 @@ class PlayerPanel extends Sprite
 	public function updateText()
 	{
 		buttons[0].text = "Type: " + typeString();
-		buttons[8].text = "Ready: " + (ready ? "Yes" : "No");
+		buttons[8].text = ready ? "Ready!" : "Not Ready";
 	}
 
 	private function changeType()
@@ -317,7 +317,7 @@ class PanelButton extends GameButton
 		{
 			if(fn != null) fn();
 		});
-		addChildAt(new Quad(Startup.stageWidth(0.125),50, c == null ? 0 : c), 0);
+		setColor(c == null ? 0 : c);
 		trigger = fn == null ? fn2 : fn;
 	}
 }

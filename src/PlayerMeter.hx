@@ -16,7 +16,7 @@ class PlayerMeter extends Sprite
 
 		addChild(new Quad(100,75, p.getColor()));
 		output = new GameText(80, 55, "Damage: " + Std.string(Math.floor(damage))+"%\nScore: 0");
-		output.x = 50; output.y = 37.5; output.fontSize = 10;
+		output.x = 50; output.y = 37.5; output.fontSize = 20;
 		output.alignPivot();
 		output.vAlign = VAlign.CENTER;
 		output.hAlign = HAlign.CENTER;

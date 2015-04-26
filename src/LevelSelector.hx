@@ -21,19 +21,16 @@ class LevelSelector extends Sprite
 
 		var gt = new GameText(Std.int(Startup.stageWidth(0.7)),
 		Std.int(Startup.stageHeight(0.2)),"Select a stage");
-		gt.fontSize = 50;
+		gt.fontSize = 50; gt.setColor(0xffffff);
 		gt.x = Startup.stageWidth(0.3); addChild(gt);
 
 		buttons = new Array();
 		for(i in 0...GameLevel.LEVEL_NUM)
 		{
-			var c = Std.int(i * 255/GameLevel.LEVEL_NUM);
 			var t = new GameText(Std.int(Startup.stageWidth(0.25)),
 			Std.int(Startup.stageHeight(1/MAX_LEVELS)), GameLevel.getName(i));
-			t.setColor(Color.rgb(c,c,c));
-			var cx = c > 0xaaaaaa ? 0 : 0xffffff;
-			t.color =Color.rgb(cx,cx,cx);
 			t.y = Startup.stageHeight(i/MAX_LEVELS);
+			t.setColor(i % 2 == 0 ? 0xffffaa : 0xffff00);
 			buttons.push(t);
 			addChild(t);
 		}
@@ -124,7 +121,7 @@ class LevelSelector extends Sprite
 			{
 				Game.game.removeChildren();
 				Game.game.addChild(new Level(new GameLevel(i), Game.game.getPlayers(), conditions));
-				Game.game.play("FinalGame2");
+				Game.game.play(i%3+2);
 				return;
 			}
 		}

@@ -17,7 +17,7 @@ class GamePanel extends Sprite
 		for(i in 0...8)
 		{
 			var panel = new PlayerPanel(i);
-			panel.x = Startup.stageWidth(i * 0.125) + Startup.stageWidth(0.0075);
+			panel.x = Startup.stageWidth(i * 0.125);
 			panel.y = Startup.stageHeight(0.25);
 			panels.push(panel);
 			addChild(panel);
@@ -151,9 +151,9 @@ class GamePanel extends Sprite
 		}
 		var point = localToGlobal(new Point(cursor.x, cursor.y));
 		var rect = new Rectangle(point.x,point.y,cursor.width,cursor.height);
-		if(rect.intersects(new Rectangle(0,25,50,25)))
+		if(rect.intersects(new Rectangle(0,25,75,25)))
 			Game.game.dec();
-		else if(rect.intersects(new Rectangle(50,25,50,25)))
+		else if(rect.intersects(new Rectangle(75,25,75,25)))
 			Game.game.inc();
 	}
 }
