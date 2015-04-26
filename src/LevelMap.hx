@@ -11,8 +11,9 @@ class LevelMap extends Sprite
 	public var spawnPoints : Array<Point>;
 	public var minX : Float;
 	public var minY : Float;
+	public var bgColor : UInt;
 
-	private function new(dataList : Array<Placeable>)
+	private function new(dataList : Array<Placeable>, c : UInt = 0x00bfff)
 	{
 		super();
 
@@ -21,7 +22,7 @@ class LevelMap extends Sprite
 		lava = new Array();
 		spawnPoints = [for(i in 0...8) new Point()];
 
-		minX = minY = 0;
+		minX = minY = 0; bgColor = c;
 		for(data in dataList)
 		{
 			if(data.x < minX) minX = data.x;

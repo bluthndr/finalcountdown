@@ -43,8 +43,8 @@ class HitCircle extends Image
 	}
 
 	public function getPosition() : Point
-	{	return localToGlobal(new Point(x,y));}
+	{	return localToGlobal(new Point(x+radius(),y+radius()));}
 
 	public inline function radius() : Float
-	{	return 256 * scaleX;}
+	{	return 128 * scaleX;}
 }

@@ -13,7 +13,7 @@ class LevelSelector extends Sprite
 	private var ctrl : Controller;
 	private var conditions : GameConditions;
 
-	private static inline var MAX_LEVELS = 10;
+	public static inline var MAX_LEVELS = 10;
 
 	public function new()
 	{
@@ -25,7 +25,7 @@ class LevelSelector extends Sprite
 		gt.x = Startup.stageWidth(0.3); addChild(gt);
 
 		buttons = new Array();
-		for(i in 0...GameLevel.LEVEL_NUM)
+		for(i in 0...MAX_LEVELS)
 		{
 			var t = new GameText(Std.int(Startup.stageWidth(0.25)),
 			Std.int(Startup.stageHeight(1/MAX_LEVELS)), GameLevel.getName(i));

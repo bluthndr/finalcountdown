@@ -22,6 +22,7 @@ class Level extends Sprite
 	private var frameCount : UInt;
 	private var timePassed : Float;
 	private var conditions : GameConditions;
+	private var bg : Quad;
 
 	private inline static var pregameText =
 	"Game will begin in: ";
@@ -34,6 +35,7 @@ class Level extends Sprite
 
 		sprites = players;
 		level = map;
+		bg = new Quad(Startup.stageWidth(), Startup.stageHeight(), level.bgColor);
 		conditions = t == null ? defaultCond : t;
 
 		camera = new Camera(level.minX, level.minY, map.width, map.height);
@@ -87,6 +89,7 @@ class Level extends Sprite
 	private function loadSprites()
 	{
 		//add all children to level
+		Game.game.addChildAt(bg,0);
 		addChild(level);
 		for(i in 0...sprites.length)
 		{
@@ -256,7 +259,7 @@ class Level extends Sprite
 	private function endGame(?e:Dynamic)
 	{
 		var p = findWinner();
-		var g = new GameText(150,100,"Player #" + p.playerID + " wins!");
+		var g = new GameText(150,100,p != null ? "Player #" + p.playerID + " wins!" : "It's a tie...");
 		g.alignPivot();
 		g.x = Startup.stageWidth(0.5);
 		g.y = Startup.stageHeight(0.5);
@@ -297,6 +300,11 @@ class Level extends Sprite
 						{
 							highScore = cur.getScore();
 							rval = cur;
+						}
+						else if(highScore == cur.getScore())
+						{
+							rval = null;
+							break;
 						}
 					}
 					catch(d:Dynamic){continue;}

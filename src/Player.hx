@@ -363,41 +363,51 @@ class Player extends GameSprite
 	{
 		if(this.getRect().intersects(lava.getRect()))
 		{
-			if(!onPlatform() && vel.y > 0 && lastRect.y <= lava.y - charHeight)
+			if(lastRect.y <= lava.y - charHeight)
 			{
-				SFX.play("lava");
-				var stun = meter.takeDamage(10,lavaStun);
-				if(!isStunned()) stunLength = stun;
-				vel.y = -lavaKnockback * meter.getDamage();
-				image.setAnimation(STUN);
-				endAttack();
+				if(!onPlatform() && vel.y > 0)
+				{
+					SFX.play("lava");
+					var stun = meter.takeDamage(10,lavaStun);
+					if(!isStunned()) stunLength = stun;
+					y = lava.y - charHeight;
+					vel.y = -lavaKnockback * meter.getDamage();
+					image.setAnimation(STUN);
+					endAttack();
+				}
 			}
-			else if(vel.x >= 0 && lastRect.x <= lava.x - charWidth)
+			else if(lastRect.y >= lava.y + lava.height)
 			{
-				SFX.play("lava");
-				var stun = meter.takeDamage(10,lavaStun);
-				if(!isStunned()) stunLength = stun;
-				vel.x = -lavaKnockback * meter.getDamage();
-				image.setAnimation(STUN);
-				endAttack();
+				if(vel.y < 0)
+				{
+					SFX.play("lava");
+					var stun = meter.takeDamage(10,lavaStun);
+					if(!isStunned()) stunLength = stun;
+					vel.y = lavaKnockback * meter.getDamage();
+					image.setAnimation(STUN);
+					endAttack();
+				}
 			}
-			else if(vel.x <= 0 && lastRect.x >= lava.x + lava.width)
+			else
 			{
-				SFX.play("lava");
-				var stun = meter.takeDamage(10,lavaStun);
-				if(!isStunned()) stunLength = stun;
-				vel.x = lavaKnockback * meter.getDamage();
-				image.setAnimation(STUN);
-				endAttack();
-			}
-			else if(vel.y < 0 && lastRect.y >= lava.y + lava.height)
-			{
-				SFX.play("lava");
-				var stun = meter.takeDamage(10,lavaStun);
-				if(!isStunned()) stunLength = stun;
-				vel.y = lavaKnockback * meter.getDamage();
-				image.setAnimation(STUN);
-				endAttack();
+				if(vel.x >= 0 && lastRect.x <= lava.x)
+				{
+					SFX.play("lava");
+					var stun = meter.takeDamage(10,lavaStun);
+					if(!isStunned()) stunLength = stun;
+					vel.x = -lavaKnockback * meter.getDamage();
+					image.setAnimation(STUN);
+					endAttack();
+				}
+				else if(vel.x <= 0 && lastRect.x > lava.x)
+				{
+					SFX.play("lava");
+					var stun = meter.takeDamage(10,lavaStun);
+					if(!isStunned()) stunLength = stun;
+					vel.x = lavaKnockback * meter.getDamage();
+					image.setAnimation(STUN);
+					endAttack();
+				}
 			}
 		}
 	}
@@ -443,6 +453,7 @@ class Player extends GameSprite
 					{
 						vel.y = jumpHeight;
 						image.setAnimation(JUMP);
+						endAttack();
 						attacker.vel.y = 0;
 					}
 				}

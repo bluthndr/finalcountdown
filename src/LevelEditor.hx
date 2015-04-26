@@ -39,6 +39,7 @@ class LevelEditor extends Sprite
 		quad = new Quad(gWidth, gHeight);
 		addChild(quad);
 		tBox = new GameText(gWidth, gHeight);
+		tBox.fontSize = 20;
 		addChild(tBox);
 		update();
 		addEventListener(Event.ADDED, init);
@@ -48,6 +49,17 @@ class LevelEditor extends Sprite
 	{
 		removeEventListener(Event.ADDED, init);
 		addEventListener(KeyboardEvent.KEY_DOWN, move);
+		showInstructions();
+	}
+
+	private function showInstructions()
+	{
+		trace("Use arrow keys to move object");
+		trace("Use WASD to change scale");
+		trace("Use Q or E to cycle through sprites");
+		trace("Use IJKL to move level");
+		trace("Use space bar to save sprite");
+		trace("Use enter to save level");
 	}
 
 	private function move(e:KeyboardEvent)
@@ -103,6 +115,7 @@ class LevelEditor extends Sprite
 				Game.game.reset();
 			case Keyboard.F1:
 				haxe.Log.clear();
+				showInstructions();
 		}
 	}
 

@@ -1,0 +1,11 @@
+<TextureAtlas imagePath="sprites.png">
+	<SubTexture name="body" x="232" y="774" width="230" height="230"/>
+	<SubTexture name="crack" x="0" y="516" width="256" height="256"/>
+	<SubTexture name="eye" x="0" y="774" width="230" height="230"/>
+	<SubTexture name="fist" x="516" y="0" width="250" height="256"/>
+	<SubTexture name="grass" x="0" y="258" width="256" height="256"/>
+	<SubTexture name="grass2" x="0" y="0" width="256" height="256"/>
+	<SubTexture name="lava" x="258" y="258" width="256" height="256"/>
+	<SubTexture name="shoe" x="258" y="516" width="256" height="256"/>
+	<SubTexture name="wall" x="258" y="0" width="256" height="256"/>
+</TextureAtlas>

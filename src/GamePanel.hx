@@ -67,16 +67,16 @@ class GamePanel extends Sprite
 
 	private function keyInput(e:KeyboardEvent)
 	{
-		if(e.keyCode == Keyboard.F1)
+		/*if(e.keyCode == Keyboard.F1)
 		{
 			Game.game.removeChildren();
 			Game.game.addChild(new LevelEditor());
 		}
 		else
-		{
+		{*/
 			for(panel in panels)
 				panel.checkKeyInput(e.keyCode);
-		}
+		//}
 	}
 
 	private function keyOutput(e:KeyboardEvent)
