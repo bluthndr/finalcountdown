@@ -84,6 +84,9 @@ class MusicButtons extends Sprite
 	private var volume : Float;
 	private var isPlaying : Bool;
 
+	public static var incPos : flash.geom.Rectangle = new flash.geom.Rectangle(0,25,75,25);
+	public static var decPos : flash.geom.Rectangle = new flash.geom.Rectangle(75,25,75,25);
+
 	public function new()
 	{
 		super();

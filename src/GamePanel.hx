@@ -5,6 +5,7 @@ import flash.geom.*;
 import flash.ui.*;
 import bitmasq.*;
 import GameText;
+import Game;
 
 class GamePanel extends Sprite
 {
@@ -151,9 +152,9 @@ class GamePanel extends Sprite
 		}
 		var point = localToGlobal(new Point(cursor.x, cursor.y));
 		var rect = new Rectangle(point.x,point.y,cursor.width,cursor.height);
-		if(rect.intersects(new Rectangle(0,25,75,25)))
+		if(rect.intersects(MusicButtons.incPos))
 			Game.game.dec();
-		else if(rect.intersects(new Rectangle(75,25,75,25)))
+		else if(rect.intersects(MusicButtons.decPos))
 			Game.game.inc();
 	}
 }

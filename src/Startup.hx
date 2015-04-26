@@ -8,7 +8,13 @@ import starling.animation.Transitions;
 import bitmasq.*;
 
 @:bitmap("assets/loading.png")
-class LoadingBitmapData extends flash.display.BitmapData { }
+class LoadingPic1 extends flash.display.BitmapData { }
+
+@:bitmap("assets/loading2.png")
+class LoadingPic2 extends flash.display.BitmapData { }
+
+@:bitmap("assets/loading3.png")
+class LoadingPic3 extends flash.display.BitmapData { }
 
 class Startup extends Sprite
 {
@@ -19,7 +25,12 @@ class Startup extends Sprite
 	{
 		super();
 
-		loadingBitmap = new Bitmap(new LoadingBitmapData(0, 0));
+		loadingBitmap = new Bitmap(switch(Std.random(3))
+		{
+			case 0: new LoadingPic2(0,0);
+			case 1: new LoadingPic3(0,0);
+			default: new LoadingPic1(0,0);
+		});
 		loadingBitmap.x = 0;
 		loadingBitmap.y = 0;
 		loadingBitmap.width = Lib.current.stage.stageWidth;
@@ -62,7 +73,7 @@ class Startup extends Sprite
 		stage.addChild(new Startup());
 	}
 
-	public static function getDeviceNum() : UInt
+	public static inline function getDeviceNum() : UInt
 	{	return deviceNum;}
 
 	public function init(fn : Void->Void)
