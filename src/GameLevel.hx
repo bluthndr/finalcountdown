@@ -130,17 +130,17 @@ class GameLevel extends LevelMap
 	private static function FirePit() : Array<Placeable>
 	{
 		return [{x : 0, y : 0, w : 64, h : 640, type : 2},
-				{x : 64, y : 256, w : 192, h : 64, type : 0},
+				{x : 64, y : 192, w : 192, h : 64, type : 0},
 				{x : 256, y : 384, w : 192, h : 64, type : 0},
 				{x : 448, y : 512, w : 192, h : 64, type : 0},
 				{x : 640, y : 384, w : 192, h : 64, type : 0},
-				{x : 832, y : 256, w : 192, h : 64, type : 0},
+				{x : 832, y : 192, w : 192, h : 64, type : 0},
 				{x : 1024, y : 0, w : 64, h : 640, type : 2},
 				{x : 0, y : -64, w : 1088, h : 64, type : 2},
 				{x : 64, y : 576, w : 960, h : 64, type : 2},
 				{x : 832, y : 512, w : 192, h : 64, type : 0},
 				{x : 64, y : 512, w : 192, h : 64, type : 0},
-				{x : 448, y : 256, w : 192, h : 64, type : 0},
+				{x : 448, y : 192, w : 192, h : 64, type : 0},
 				{x : 128, y : 128, w : 64, h : 64, type : 3},
 				{x : 896, y : 128, w : 64, h : 64, type : 4},
 				{x : 896, y : 384, w : 64, h : 64, type : 6},
@@ -182,12 +182,9 @@ class GameLevel extends LevelMap
 	{
 		return [{x : 0, y : 0, w : 64, h : 960, type : 0},
 				{x : 64, y : 768, w : 576, h : 192, type : 1},
-				{x : 640, y : 704, w : 64, h : 256, type : 0},
-				{x : 704, y : 704, w : 704, h : 256, type : 1},
 				{x : 896, y : 576, w : 192, h : 64, type : 1},
 				{x : 1088, y : 448, w : 192, h : 64, type : 1},
 				{x : 896, y : 320, w : 192, h : 64, type : 1},
-				{x : 1408, y : 704, w : 64, h : 256, type : 0},
 				{x : 1472, y : 768, w : 256, h : 192, type : 1},
 				{x : 1728, y : 704, w : 128, h : 256, type : 2},
 				{x : 1856, y : 768, w : 256, h : 192, type : 1},
@@ -201,7 +198,8 @@ class GameLevel extends LevelMap
 				{x : 1600, y : 640, w : 64, h : 64, type : 7},
 				{x : 128, y : 640, w : 64, h : 64, type : 8},
 				{x : 448, y : 640, w : 64, h : 64, type : 9},
-				{x : 1984, y : 640, w : 64, h : 64, type : 10}];
+				{x : 1984, y : 640, w : 64, h : 64, type : 10},
+				{x : 640, y : 704, w : 832, h : 256, type : 0}];
 	}
 
 	private static inline function Hill() : Array<Placeable>

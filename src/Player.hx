@@ -56,11 +56,11 @@ class Player extends GameSprite
 	knockback : new Point(0.75,-0.01), stun : 90, ivFrames : 3};
 	public static var hgPunch : AttackProperties = {damage : 5,
 	knockback : new Point(1.5, -0.05), stun : 240, ivFrames : 10};
-	public static var lgKick : AttackProperties = {damage : 3,
+	public static var lgKick : AttackProperties = {damage : 6,
 	knockback : new Point(0.5, -0.1), stun : 200, ivFrames : 5};
-	public static var hgKick : AttackProperties = {damage : 6,
+	public static var hgKick : AttackProperties = {damage : 12,
 	knockback : new Point(0.75, -0.5), stun : 200, ivFrames : 10};
-	public static var lgEye : AttackProperties = {damage : 2,
+	public static var lgEye : AttackProperties = {damage : 4.75,
 	knockback : new Point(0.0, -0.65), stun : 120, ivFrames : 10};
 	public static var hgEye : AttackProperties = {damage : 7.25,
 	knockback : new Point(0.0, -1.0),  stun : 300, ivFrames : 30};
@@ -149,7 +149,7 @@ class Player extends GameSprite
 
 	private function cpuLogic(e : EnterFrameEvent)
 	{
-		if(dead) return;
+		if(dead || isStunned()) return;
 		timePassed += e.passedTime;
 		if(timePassed > 0.1)
 		{
@@ -186,7 +186,7 @@ class Player extends GameSprite
 	{
 		var rect1 = p1.getRect();
 		var rect2 = p2.getRect();
-		return Math.pow((rect1.y - rect2.y) / (rect1.x - rect2.x), 2);
+		return Math.pow((rect1.x - rect2.x),2) + Math.pow((rect1.y - rect2.y),2);
 	}
 
 	private function gamepadInput(e:GamepadEvent)
@@ -489,6 +489,7 @@ class Player extends GameSprite
 				if(isBlocking()) attacker.takeDamage(damage, attacker.image.scaleX > 0);
 				else takeDamage(damage, attacker.image.scaleX < 0);
 				lastHitBy = attacker;
+				SFX.play("Hit");
 				return true;
 			}
 		}
@@ -586,6 +587,7 @@ class Player extends GameSprite
 	{
 		makeLimbs();
 		curLevel.dispatchEvent(new PlayerDiedEvent(this,lastHitBy));
+		SFX.play("Crack");
 	}
 
 	public function fatalKill() : PlayerMeter
@@ -638,6 +640,7 @@ class Player extends GameSprite
 				platOn = null;
 				jumpHeld = true;
 				image.setAnimation(WALL_JUMP);
+				SFX.play("Jump");
 			}
 			else if(onPlatform())
 			{
@@ -657,6 +660,7 @@ class Player extends GameSprite
 					platOn = null;
 					jumpHeld = true;
 					image.setAnimation(JUMP);
+					SFX.play("Jump");
 				}
 			}
 			else if(!image.is(STICK) && wallDir != NONE)

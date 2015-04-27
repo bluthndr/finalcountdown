@@ -14,9 +14,9 @@ class PlayerMeter extends Sprite
 		super();
 		damage = 0;
 
-		addChild(new Quad(100,75, p.getColor()));
-		output = new GameText(80, 55, "Damage: " + Std.string(Math.floor(damage))+"%\nScore: 0");
-		output.x = 50; output.y = 37.5; output.fontSize = 20;
+		addChild(new Quad(100,100, p.getColor()));
+		output = new GameText(80, 80, "Score: 0\n" + Std.string(Math.floor(damage))+"%");
+		output.x = 50; output.y = 50; output.fontSize = 30;
 		output.alignPivot();
 		output.vAlign = VAlign.CENTER;
 		output.hAlign = HAlign.CENTER;
@@ -27,7 +27,7 @@ class PlayerMeter extends Sprite
 		if(i >= 4)
 		{
 			x = Startup.stageWidth(0.25*(i-4)) + Startup.stageWidth(0.05);
-			y = Startup.stageHeight() - 75;
+			y = Startup.stageHeight() - 100;
 		}
 		else
 		{
@@ -59,7 +59,7 @@ class PlayerMeter extends Sprite
 	public function updateText(?sc : Int)
 	{
 		if(sc != null) score = sc;
-		output.text = "Damage: " + Std.string(Math.floor(damage)) + "%\nScore: " + Std.string(score);
+		output.text = "Score: " + Std.string(score)+ "\n" + Std.string(Math.floor(damage)) + "%";
 		var gb : UInt = cast(255 - damage * 255 / MAX_DAMAGE, UInt);
 		output.color = Color.rgb(255,gb,gb);
 	}

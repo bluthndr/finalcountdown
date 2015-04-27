@@ -155,8 +155,24 @@ class GamePanel extends Sprite
 		var point = localToGlobal(new Point(cursor.x, cursor.y));
 		var rect = new Rectangle(point.x,point.y,cursor.width,cursor.height);
 		if(rect.intersects(MusicButtons.incPos))
-			Game.game.dec();
+		{
+			Game.game.decM();
+			SFX.play("Select");
+		}
 		else if(rect.intersects(MusicButtons.decPos))
-			Game.game.inc();
+		{
+			Game.game.incM();
+			SFX.play("Select");
+		}
+		else if(rect.intersects(SoundButtons.incPos))
+		{
+			Game.game.incS();
+			SFX.play("Select");
+		}
+		else if(rect.intersects(SoundButtons.decPos))
+		{
+			Game.game.decS();
+			SFX.play("Select");
+		}
 	}
 }

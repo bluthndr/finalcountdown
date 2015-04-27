@@ -41,7 +41,11 @@ class GameButton extends Button implements Bordered
 		fontColor = 0xffffff;
 		fontName = GameText.bitmapFont;
 		fontSize = GameText.defaultFontSize;
-		addEventListener(Event.TRIGGERED, fn);
+		addEventListener(Event.TRIGGERED, function()
+		{
+			SFX.play("Select");
+			fn();
+		});
 		quad = new Quad(w,h,0);
 		addChildAt(quad,0);
 	}

@@ -47,3 +47,4 @@ makefile
 Makefile
 assets/raw/*
 *.html
+*.xml

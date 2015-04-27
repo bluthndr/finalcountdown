@@ -143,6 +143,7 @@ class PlayerPanel extends Sprite
 		colors[0] -= colVal;
 		if(colors[0] < 0) colors[0] = 0;
 		setColor();
+		SFX.play("Select");
 	}
 
 	private inline function incRed()
@@ -150,6 +151,7 @@ class PlayerPanel extends Sprite
 		colors[0] += colVal;
 		if(colors[0] > 255) colors[0] = 255;
 		setColor();
+		SFX.play("Select");
 	}
 
 	private inline function decGreen()
@@ -157,6 +159,7 @@ class PlayerPanel extends Sprite
 		colors[1] -= colVal;
 		if(colors[1] < 0) colors[1] = 0;
 		setColor();
+		SFX.play("Select");
 	}
 
 	private inline function incGreen()
@@ -164,6 +167,7 @@ class PlayerPanel extends Sprite
 		colors[1] += colVal;
 		if(colors[1] > 255) colors[1] = 255;
 		setColor();
+		SFX.play("Select");
 	}
 
 	private inline function decBlue()
@@ -171,6 +175,7 @@ class PlayerPanel extends Sprite
 		colors[2] -= colVal;
 		if(colors[2] < 0) colors[2] = 0;
 		setColor();
+		SFX.play("Select");
 	}
 
 	private inline function incBlue()
@@ -178,6 +183,7 @@ class PlayerPanel extends Sprite
 		colors[2] += colVal;
 		if(colors[2] > 255) colors[2] = 255;
 		setColor();
+		SFX.play("Select");
 	}
 
 	public inline function getColor() : UInt
@@ -270,6 +276,7 @@ class PlayerPanel extends Sprite
 			{
 				try{button.trigger(playerID);}
 				catch(d:Dynamic){button.trigger();}
+				SFX.play("Select");
 			}
 		}
 	}

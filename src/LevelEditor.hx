@@ -1,7 +1,7 @@
 import starling.display.*;
 import starling.events.*;
 import flash.ui.*;
-import flash.filesystem.*;
+//import flash.filesystem.*;
 import flash.geom.Point;
 
 typedef Placeable = {x : Float, y : Float, w : Float, h : Float, type : Int}
@@ -109,8 +109,8 @@ class LevelEditor extends Sprite
 				y -= gHeight;
 			case Keyboard.SPACE:
 				add();
-			case Keyboard.ENTER:
-				save();
+			/*case Keyboard.ENTER:
+				save();*/
 			case Keyboard.ESCAPE:
 				Game.game.reset();
 			case Keyboard.F1:
@@ -191,7 +191,7 @@ class LevelEditor extends Sprite
 		placeable.push(clone(curplac));
 	}
 
-	private function save()
+	/*private function save()
 	{
 		var file = File.desktopDirectory.resolvePath("level.txt");
 		var fout = new FileStream();
@@ -199,7 +199,7 @@ class LevelEditor extends Sprite
 		fout.writeUTFBytes(toString());
 		fout.close();
 		trace("Saved Level");
-	}
+	}*/
 
 	public function toString() : String
 	{

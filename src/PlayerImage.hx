@@ -1,5 +1,5 @@
 import starling.display.*;
-import flash.filesystem.*;
+//import flash.filesystem.*;
 import starling.events.*;
 import PlayerAttributes;
 
@@ -427,7 +427,7 @@ class PlayerImage extends Sprite
 		};
 	}
 
-	public function save()
+	/*public function save()
 	{
 		var file = File.desktopDirectory.resolvePath("animations.txt");
 		var fout = new FileStream();
@@ -450,5 +450,5 @@ class PlayerImage extends Sprite
 		}
 		fout.close();
 		trace("Saved animation");
-	}
+	}*/
 }

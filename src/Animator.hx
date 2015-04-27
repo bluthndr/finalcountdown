@@ -59,8 +59,8 @@ class Animator extends Sprite
 		{
 			switch(e.keyCode)
 			{
-				case Keyboard.ENTER:
-					image.save();
+				/*case Keyboard.ENTER:
+					image.save();*/
 				case Keyboard.PAGE_UP:
 					image.scaleX += 0.1;
 					image.scaleY = image.scaleX;

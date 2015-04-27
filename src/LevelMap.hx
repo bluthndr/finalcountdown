@@ -11,6 +11,7 @@ class LevelMap extends Sprite
 	public var spawnPoints : Array<Point>;
 	public var minX : Float;
 	public var minY : Float;
+	public var bottom : Float;
 	public var bgColor : UInt;
 
 	private function new(dataList : Array<Placeable>, c : UInt = 0x00bfff)
@@ -55,6 +56,7 @@ class LevelMap extends Sprite
 	private function addHandle(e:Event)
 	{
 		removeEventListener(Event.ADDED,addHandle);
+		bottom = minY + height;
 		flatten();
 	}
 

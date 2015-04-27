@@ -93,18 +93,18 @@ class LevelSelector extends Sprite
 	{
 		if(e.value == 1)
 		{
-			if(equals(e.control, ctrl.up)) cursor.vertDir = NEGATIVE;
+			if(equals(e.control, Gamepad.D_UP)) cursor.vertDir = NEGATIVE;
 			else if(equals(e.control, ctrl.down)) cursor.vertDir = POSITIVE;
 			else if(equals(e.control, ctrl.left)) cursor.horiDir = NEGATIVE;
 			else if(equals(e.control, ctrl.right)) cursor.horiDir = POSITIVE;
-			else if(equals(e.control, ctrl.lAtt)) confirmAction();
+			else if(equals(e.control, ctrl.lAtt) || equals(e.control, ctrl.up)) confirmAction();
 			else if(equals(e.control, ctrl.hAtt)) Game.game.reset();
 		}
 		else if(e.value == 0)
 		{
 			if(equals(e.control, ctrl.left) || equals(e.control, ctrl.right))
 				cursor.horiDir = NO_DIR;
-			else if(equals(e.control, ctrl.up) || equals(e.control, ctrl.down))
+			else if(equals(e.control, Gamepad.D_UP) || equals(e.control, ctrl.down))
 				cursor.vertDir = NO_DIR;
 		}
 	}
@@ -137,6 +137,7 @@ class LevelSelector extends Sprite
 					if(conditions.goal > 300000)
 						conditions.goal = 30000;
 			}
+			SFX.play("Select");
 			updateText();
 		}
 		else if(cursor.bounds.intersects(buttons2[0].bounds))
@@ -150,6 +151,7 @@ class LevelSelector extends Sprite
 					conditions.type = STOCK;
 					conditions.goal = 1;
 			}
+			SFX.play("Select");
 			updateText();
 		}
 	}

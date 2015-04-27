@@ -19,8 +19,8 @@ class Level extends Sprite
 	private var camera : Camera;
 	private var gameTimer : flash.utils.Timer;
 
-	private var showFPS : Bool;
-	private var frameCount : UInt;
+	//private var showFPS : Bool;
+	//private var frameCount : UInt;
 	private var timePassed : Float;
 	private var conditions : GameConditions;
 	private var bg : Quad;
@@ -45,8 +45,9 @@ class Level extends Sprite
 
 		addEventListener(Event.ADDED_TO_STAGE, preGame);
 
-		showFPS = false;
-		frameCount = 0; timePassed = 0;
+		//showFPS = false;
+		//frameCount = 0;
+		timePassed = 0;
 		meters = new Array();
 	}
 
@@ -80,7 +81,7 @@ class Level extends Sprite
 		addEventListener(Event.ENTER_FRAME, update);
 		if(players.length > 1)
 			addEventListener(PlayerDiedEvent.DEATH, updateScore);
-		addEventListener(KeyboardEvent.KEY_UP, debugFunc);
+		//addEventListener(KeyboardEvent.KEY_UP, debugFunc);
 		if(conditions.type == TIME)
 		{
 			gameTimer = new flash.utils.Timer(conditions.goal, 1);
@@ -108,7 +109,7 @@ class Level extends Sprite
 
 	private function update(e:EnterFrameEvent)
 	{
-		if(showFPS)
+		/*if(showFPS)
 		{
 			timePassed += e.passedTime;
 			++frameCount;
@@ -118,7 +119,7 @@ class Level extends Sprite
 				trace("FPS: " + frameCount);
 				frameCount = 0; timePassed = 0;
 			}
-		}
+		}*/
 
 		//movement and collision detection
 		for(player in players)
@@ -126,7 +127,12 @@ class Level extends Sprite
 			player.gravity();
 			if(player.visible)
 			{
-				if(!player.onPlatform())
+				if(player.y < level.minY || player.y >= level.bottom)
+				{
+					player.kill();
+					continue;
+				}
+				else if(!player.onPlatform())
 				{
 					for(platform in level.platforms)
 					{
@@ -259,7 +265,7 @@ class Level extends Sprite
 		g.y = Startup.stageHeight(0.5);
 		Game.game.addChild(g);
 		removeEventListener(PlayerDiedEvent.DEATH, updateScore);
-		showFPS = false;
+		//showFPS = false;
 		timePassed = 0;
 		addEventListener(Event.ENTER_FRAME, gameOver);
 	}
@@ -315,7 +321,7 @@ class Level extends Sprite
 		return rval;
 	}
 
-	private function debugFunc(e:KeyboardEvent)
+	/*private function debugFunc(e:KeyboardEvent)
 	{
 		switch(e.keyCode)
 		{
@@ -337,7 +343,7 @@ class Level extends Sprite
 				haxe.Log.clear();
 				cast(parent, Game).reset();
 		}
-	}
+	}*/
 
 	public function getSpawnPoint(p : Player) : Point
 	{

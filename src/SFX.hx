@@ -2,10 +2,7 @@ import flash.media.*;
 
 class SFX
 {
-	public static function play(s : String)
-	{
-		var sound = Root.assets.getSound(s);
-		var channel = sound.play();
-		channel.soundTransform = new SoundTransform(0.1);
-	}
+	public static var soundVol = 0.1;
+	public inline static function play(s : String)
+	{	Root.assets.playSound(s,0,0,new SoundTransform(soundVol));}
 }
