@@ -35,6 +35,7 @@ class Level extends Sprite
 		super();
 
 		players = _players;
+		Player.curLevel = this;
 		sprites = new Array();
 		level = map;
 		bg = new Quad(Startup.stageWidth(), Startup.stageHeight(), level.bgColor);
@@ -122,9 +123,9 @@ class Level extends Sprite
 		//movement and collision detection
 		for(player in players)
 		{
+			player.gravity();
 			if(player.visible)
 			{
-				player.gravity();
 				if(!player.onPlatform())
 				{
 					for(platform in level.platforms)
@@ -232,10 +233,10 @@ class Level extends Sprite
 		}
 		else
 		{
+			e.victim.updateScore(false);
 			switch(conditions.type)
 			{
 				case STOCK:
-					e.victim.updateScore(false);
 					if(Math.abs(e.victim.getScore()) == conditions.goal)
 					{
 						removeChild(e.victim);
@@ -244,7 +245,6 @@ class Level extends Sprite
 						if(players.length <= 1) endGame();
 					}
 				case TIME:
-					e.victim.updateScore(false);
 					e.killer.updateScore(true);
 			}
 		}
@@ -259,8 +259,9 @@ class Level extends Sprite
 		g.y = Startup.stageHeight(0.5);
 		Game.game.addChild(g);
 		removeEventListener(PlayerDiedEvent.DEATH, updateScore);
-		addEventListener(Event.ENTER_FRAME, gameOver);
+		showFPS = false;
 		timePassed = 0;
+		addEventListener(Event.ENTER_FRAME, gameOver);
 	}
 
 	private function gameOver(e : EnterFrameEvent)
@@ -301,7 +302,7 @@ class Level extends Sprite
 		var rval = null;
 		for(player in players)
 		{
-			if(p != player)
+			if(p != player && player.alive())
 			{
 				var tempDist = Player.distance(player,p);
 				if(tempDist < dist)

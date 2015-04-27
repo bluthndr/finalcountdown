@@ -48,6 +48,7 @@ class Game extends Sprite
 		panel.reset();
 		addChild(panel);
 		touchable = true;
+		Player.curLevel = null;
 	}
 
 	public function gotoLevelSelect()

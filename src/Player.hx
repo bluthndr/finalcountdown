@@ -14,6 +14,8 @@ enum DIRECTION
 
 class Player extends GameSprite
 {
+	public static var curLevel : Level;
+
 	private var image : PlayerImage;
 	private var bound : Quad;
 
@@ -132,7 +134,7 @@ class Player extends GameSprite
 		else {timePassed = 0.0; addEventListener(Event.ENTER_FRAME, cpuLogic);}
 		curRect = new Rectangle(x,y,WIDTH,HEIGHT);
 		lastRect = curRect.clone();
-		cast(parent, Level).addMeter(meter);
+		curLevel.addMeter(meter);
 		Game.game.addChild(meter);
 
 		blockImage = new HitCircle();
@@ -147,19 +149,31 @@ class Player extends GameSprite
 
 	private function cpuLogic(e : EnterFrameEvent)
 	{
+		if(dead) return;
 		timePassed += e.passedTime;
 		if(timePassed > 0.1)
 		{
-
-			var target = cast(parent, Level).findClosest(this);
+			var target = curLevel.findClosest(this);
 			if(target != null)
 			{
-				if(x < target.x-charWidth) dirHeld = RIGHT;
-				else if(x > target.x+charWidth*2) dirHeld = LEFT;
+				if(image.is(STICK))
+				{jumpHeld = false; dirHeld = NONE; jump();}
+				else if(x <= target.x-charWidth)
+				{
+					dirHeld = RIGHT;
+					if(wallDir == LEFT)
+					{jumpHeld = false; jump();}
+				}
+				else if(x >= target.x+charWidth*1.5)
+				{
+					dirHeld = LEFT;
+					if(wallDir ==  RIGHT)
+					{jumpHeld = false; jump();}
+				}
 				else
 				{
 					dirHeld = NONE;
-					if(y - charHeight >= target.y){jumpHeld = false; jump();}
+					if(y - charHeight*0.25 >= target.y){jumpHeld = false; jump();}
 					if(!attacking) randomAttack();
 				}
 			}
@@ -355,8 +369,8 @@ class Player extends GameSprite
 					}
 					else
 					{
-						y = wall.y + wall.height;
-						vel.y = 0;
+						y = wall.y + wall.height+1;
+						vel.y = 1;
 					}
 				}
 			}
@@ -563,7 +577,7 @@ class Player extends GameSprite
 		limbs.push(leftEye);
 		limbs.push(leftShoe);
 		limbs.push(leftHand);
-		cast(parent, Level).addLimbs(limbs);
+		curLevel.addLimbs(limbs);
 		dead = true; respawn = 180;
 		visible = false; platOn = null;
 	}
@@ -571,7 +585,7 @@ class Player extends GameSprite
 	public function kill()
 	{
 		makeLimbs();
-		parent.dispatchEvent(new PlayerDiedEvent(this,lastHitBy));
+		curLevel.dispatchEvent(new PlayerDiedEvent(this,lastHitBy));
 	}
 
 	public function fatalKill() : PlayerMeter
@@ -750,7 +764,7 @@ class Player extends GameSprite
 	{
 		if(dead)
 		{
-			if(--respawn <= 0) reset(cast(parent,Level).getSpawnPoint(this));
+			if(--respawn <= 0) reset(curLevel.getSpawnPoint(this));
 			return;
 		}
 		else if(isStunned())
