@@ -57,7 +57,7 @@ class Game extends Sprite
 		addChild(new LevelSelector());
 	}
 
-	public inline function getPlayers() : Array<GameSprite>
+	public inline function getPlayers() : Array<Player>
 	{	return panel.loadPlayers();}
 
 	public inline function getTopCtrls() : Controller

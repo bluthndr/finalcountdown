@@ -3,6 +3,7 @@ import starling.display.*;
 import flash.geom.*;
 import bitmasq.*;
 import PlayerAttributes;
+import PlayerPanel;
 
 enum DIRECTION
 {
@@ -36,12 +37,16 @@ class Player extends GameSprite
 
 	private var blockLength : Int;
 	private var blockImage : HitCircle;
+	private var playerType : PlayerType;
 
 	public static inline var WIDTH = 48;
 	public static inline var HEIGHT = 64;
 
 	private static inline var lavaKnockback = 1.5;
 	private static inline var lavaStun = 120;
+
+	//for cpu logic
+	private var timePassed : Float;
 
 	public static inline var END_ATTACK = "EndAttack";
 
@@ -77,6 +82,7 @@ class Player extends GameSprite
 		charWidth = WIDTH;
 		charHeight = HEIGHT;
 		color = p.getColor();
+		playerType = p.getType();
 		jumpHeight = -30;
 
 		meter = new PlayerMeter(this, i++);
@@ -106,20 +112,24 @@ class Player extends GameSprite
 	{
 		removeEventListener(Event.ADDED_TO_STAGE, addHandler);
 
-		if(controller.gamepad)
+		if(playerType == HUMAN)
 		{
-			Gamepad.get().addEventListener(GamepadEvent.CHANGE, gamepadInput);
-			addEventListener(Event.REMOVED_FROM_STAGE,
-			function(e:Event)
+			if(controller.gamepad)
 			{
-				Gamepad.get().removeEventListener(GamepadEvent.CHANGE, gamepadInput);
-			});
+				Gamepad.get().addEventListener(GamepadEvent.CHANGE, gamepadInput);
+				addEventListener(Event.REMOVED_FROM_STAGE,
+				function(e:Event)
+				{
+					Gamepad.get().removeEventListener(GamepadEvent.CHANGE, gamepadInput);
+				});
+			}
+			else
+			{
+				addEventListener(KeyboardEvent.KEY_UP, keyboardInputUp);
+				addEventListener(KeyboardEvent.KEY_DOWN, keyboardInputDown);
+			}
 		}
-		else
-		{
-			addEventListener(KeyboardEvent.KEY_UP, keyboardInputUp);
-			addEventListener(KeyboardEvent.KEY_DOWN, keyboardInputDown);
-		}
+		else {timePassed = 0.0; addEventListener(Event.ENTER_FRAME, cpuLogic);}
 		curRect = new Rectangle(x,y,WIDTH,HEIGHT);
 		lastRect = curRect.clone();
 		cast(parent, Level).addMeter(meter);
@@ -133,6 +143,36 @@ class Player extends GameSprite
 		blockImage.alpha = 0.9;
 		blockImage.x = -9;
 		addChild(blockImage);
+	}
+
+	private function cpuLogic(e : EnterFrameEvent)
+	{
+		timePassed += e.passedTime;
+		if(timePassed > 0.1)
+		{
+
+			var target = cast(parent, Level).findClosest(this);
+			if(target != null)
+			{
+				if(x < target.x-charWidth) dirHeld = RIGHT;
+				else if(x > target.x+charWidth*2) dirHeld = LEFT;
+				else
+				{
+					dirHeld = NONE;
+					if(y - charHeight >= target.y){jumpHeld = false; jump();}
+					if(!attacking) randomAttack();
+				}
+			}
+			else dirHeld = NONE;
+			timePassed = 0.0;
+		}
+	}
+
+	public static function distance(p1 : Player, p2 : Player) : Float
+	{
+		var rect1 = p1.getRect();
+		var rect2 = p2.getRect();
+		return Math.pow((rect1.y - rect2.y) / (rect1.x - rect2.x), 2);
 	}
 
 	private function gamepadInput(e:GamepadEvent)
@@ -552,6 +592,25 @@ class Player extends GameSprite
 		if(a == LEFT) return b != RIGHT;
 		else if(a == RIGHT) return b != LEFT;
 		else return false;
+	}
+
+	private function randomAttack()
+	{
+		attack(onPlatform() ?
+		switch(Std.random(6))
+		{
+			case 1: HG_PUNCH;
+			case 2: LG_KICK;
+			case 3: HG_KICK;
+			case 4: LG_EYE;
+			case 5: HG_EYE;
+			default: LG_PUNCH;
+		} :
+		switch(Std.random(2))
+		{
+			case 1: L_AIR;
+			default: H_AIR;
+		});
 	}
 
 	private function jump()

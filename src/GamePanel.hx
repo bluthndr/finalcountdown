@@ -95,9 +95,11 @@ class GamePanel extends Sprite
 		var ready = true;
 		for(p in panels)
 		{
-			p.updateText();
-			if(p.isHuman() && !p.isReady())
+			if(!p.isReady())
+			{
 				ready = false;
+				break;
+			}
 		}
 		if(ready)
 		{
@@ -106,13 +108,13 @@ class GamePanel extends Sprite
 		}
 	}
 
-	public function loadPlayers() : Array<GameSprite>
+	public function loadPlayers() : Array<Player>
 	{
-		var players = new Array<GameSprite>();
+		var players = new Array<Player>();
 		var i = 0;
 		for(panel in panels)
 		{
-			if(panel.isHuman())
+			if(panel.getType() != NONE)
 			{
 				var player = new Player(panel,i);
 				players.push(player);

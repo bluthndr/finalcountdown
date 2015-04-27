@@ -24,9 +24,8 @@ class HitCircle extends Image
 		{
 			x = im.x;
 			y = im.y;
-			pivotX = im.pivotX;
-			pivotY = im.pivotY;
 			scaleX = scaleY = im.scaleX;
+			pivotX = pivotY = radius();
 		}
 		alpha = 0.5;
 	}
@@ -39,12 +38,13 @@ class HitCircle extends Image
 		var deltaY = pos1.y - pos2.y;
 		var dist = deltaX*deltaX + deltaY*deltaY;
 		var radial = radius() + c.radius();
-		return dist < radial*radial;
+		if(radial < 0) trace(radial);
+		return dist <= radial*radial;
 	}
 
 	public function getPosition() : Point
-	{	return localToGlobal(new Point(x+radius(),y+radius()));}
+	{	return localToGlobal(new Point(x,y));}
 
 	public inline function radius() : Float
-	{	return 128 * scaleX;}
+	{	return Math.abs(128 * scaleX);}
 }

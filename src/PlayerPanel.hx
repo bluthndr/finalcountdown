@@ -183,6 +183,9 @@ class PlayerPanel extends Sprite
 	public inline function getColor() : UInt
 	{	return Color.rgb(colors[0], colors[1], colors[2]);}
 
+	public inline function getType() : PlayerType
+	{	return type;}
+
 	public inline function typeString() : String
 	{
 		return switch(type)
@@ -193,17 +196,17 @@ class PlayerPanel extends Sprite
 		}
 	}
 
-	public inline function isHuman() : Bool
-	{	return type == HUMAN;}
+	public inline function isReady() : Bool
+	{	return type == NONE || (type != NONE && ready);}
 
 	public inline function getCtrls() : Controller
 	{	return ctrl;}
 
 	public function reset()
-	{	ready = false; cursor.reset(); updateText();}
-
-	public inline function isReady() : Bool
-	{	return ready;}
+	{
+		ready = type == CPU ? true : false;
+		cursor.reset(); updateText();
+	}
 
 	private inline function setColor()
 	{	cursor.color = quad.color = getColor();}
@@ -302,7 +305,7 @@ class PlayerPanel extends Sprite
 	{
 		if(type == HUMAN)
 		{
-			ready = !ready;
+			ready = !ready; updateText();
 			parent.dispatchEventWith(Game.READY);
 		}
 	}

@@ -82,8 +82,9 @@ class PlayerImage extends Sprite
 
 	public function toggleCircles()
 	{
-		for(circle in circles)
-			circle.visible = !circle.visible;
+		//for(circle in circles)
+			//circle.visible = !circle.visible;
+		circles[3].visible = !circles[3].visible;
 	}
 
 	public function setAnimation(a : Animation)

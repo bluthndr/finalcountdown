@@ -13,6 +13,7 @@ typedef GameConditions = {type : GAME_TYPE, goal : Float}
 class Level extends Sprite
 {
 	private var sprites : Array<GameSprite>;
+	private var players : Array<Player>;
 	private var meters : Array<PlayerMeter>;
 	private var level : LevelMap;
 	private var camera : Camera;
@@ -29,11 +30,12 @@ class Level extends Sprite
 
 	private static var defaultCond : GameConditions = {type : TIME, goal : 30000};
 
-	public function new(map : LevelMap, players : Array<GameSprite>, ?t : GameConditions)
+	public function new(map : LevelMap, _players : Array<Player>, ?t : GameConditions)
 	{
 		super();
 
-		sprites = players;
+		players = _players;
+		sprites = new Array();
 		level = map;
 		bg = new Quad(Startup.stageWidth(), Startup.stageHeight(), level.bgColor);
 		conditions = t == null ? defaultCond : t;
@@ -75,7 +77,7 @@ class Level extends Sprite
 		removeEventListener(Event.ENTER_FRAME, countdown);
 
 		addEventListener(Event.ENTER_FRAME, update);
-		if(sprites.length > 1)
+		if(players.length > 1)
 			addEventListener(PlayerDiedEvent.DEATH, updateScore);
 		addEventListener(KeyboardEvent.KEY_UP, debugFunc);
 		if(conditions.type == TIME)
@@ -91,13 +93,13 @@ class Level extends Sprite
 		//add all children to level
 		Game.game.addChildAt(bg,0);
 		addChild(level);
-		for(i in 0...sprites.length)
+		for(i in 0...players.length)
 		{
-			sprites[i].x = level.spawnPoints[i].x;
-			sprites[i].y = level.spawnPoints[i].y;
-			camera.x += sprites[i].x;
-			camera.y += sprites[i].y;
-			addChild(sprites[i]);
+			players[i].x = level.spawnPoints[i].x;
+			players[i].y = level.spawnPoints[i].y;
+			camera.x += players[i].x;
+			camera.y += players[i].y;
+			addChild(players[i]);
 		}
 
 		//for(i in 0...numChildren) trace(getChildAt(i));
@@ -118,10 +120,36 @@ class Level extends Sprite
 		}
 
 		//movement and collision detection
+		for(player in players)
+		{
+			if(player.visible)
+			{
+				player.gravity();
+				if(!player.onPlatform())
+				{
+					for(platform in level.platforms)
+					{
+						if(player.platformCollision(platform))
+							break;
+					}
+				}
+				for(wall in level.walls)
+				{	player.wallCollision(wall.getRect(),wall);}
+				for(l in level.lava)
+				{	player.lavaCollision(l);}
+				for(player2 in players)
+				{
+					if(player != player2)
+					{
+						if(player.playerCollision(player2))
+							break;
+					}
+				}
+			}
+		}
 		for(sprite in sprites)
 		{
 			sprite.gravity();
-			if(!sprite.visible) continue;
 			if(!sprite.onPlatform())
 			{
 				for(platform in level.platforms)
@@ -134,23 +162,6 @@ class Level extends Sprite
 			{	sprite.wallCollision(wall.getRect(),wall);}
 			for(l in level.lava)
 			{	sprite.lavaCollision(l);}
-			try
-			{
-				var p1 = cast(sprite, Player);
-				for(sp2 in sprites)
-				{
-					if(sp2 != p1)
-					{
-						try
-						{
-							var p2 = cast(sp2, Player);
-							if(p1.playerCollision(p2)) break;
-						}
-						catch(d:Dynamic) continue;
-					}
-				}
-			}
-			catch(d:Dynamic)continue;
 		}
 
 		//camera movement
@@ -162,9 +173,9 @@ class Level extends Sprite
 			var changed = false;
 			var point = globalToLocal(new Point(meter.x,meter.y));
 			var mRect = new Rectangle(point.x, point.y, meter.width, meter.height);
-			for(sprite in sprites)
+			for(player in players)
 			{
-				if(Std.is(sprite, Player) && sprite.getLocalRect().intersects(mRect))
+				if(player.getLocalRect().intersects(mRect))
 				{
 					meter.alpha = 0.5;
 					changed = true;
@@ -181,21 +192,16 @@ class Level extends Sprite
 		var avg = new Point();
 		var plyNum = 0;
 		var positions = new Array<Point>();
-		for(sprite in sprites)
+		for(player in players)
 		{
-			try
+			if(player.alive())
 			{
-				var ply = cast(sprite, Player);
-				if(ply.alive())
-				{
-					avg.x += sprite.x;
-					avg.y += sprite.y;
-					positions.push(new Point(sprite.x-Player.WIDTH,sprite.y-Player.HEIGHT));
-					positions.push(new Point(sprite.x+Player.WIDTH*2,sprite.y+Player.HEIGHT*2));
-					++plyNum;
-				}
+				avg.x += player.x;
+				avg.y += player.y;
+				positions.push(new Point(player.x-Player.WIDTH,player.y-Player.HEIGHT));
+				positions.push(new Point(player.x+Player.WIDTH*2,player.y+Player.HEIGHT*2));
+				++plyNum;
 			}
-			catch(d:Dynamic) continue;
 		}
 		avg.x /= plyNum;
 		avg.y /= plyNum;
@@ -219,10 +225,9 @@ class Level extends Sprite
 			if(conditions.type == STOCK && Math.abs(e.victim.getScore()) == conditions.goal)
 			{
 				removeChild(e.victim);
-				sprites.remove(e.victim);
+				players.remove(e.victim);
 				meters.remove(e.victim.fatalKill());
-				if(playerCount() <= 1)
-					endGame();
+				if(players.length <= 1) endGame();
 			}
 		}
 		else
@@ -234,26 +239,15 @@ class Level extends Sprite
 					if(Math.abs(e.victim.getScore()) == conditions.goal)
 					{
 						removeChild(e.victim);
-						sprites.remove(e.victim);
+						players.remove(e.victim);
 						meters.remove(e.victim.fatalKill());
-						if(playerCount() <= 1)
-							endGame();
+						if(players.length <= 1) endGame();
 					}
 				case TIME:
 					e.victim.updateScore(false);
 					e.killer.updateScore(true);
 			}
 		}
-	}
-
-	private function playerCount() : UInt
-	{
-		var rval = 0;
-		for(sprite in sprites)
-		{
-			if(Std.is(sprite, Player)) ++rval;
-		}
-		return rval;
 	}
 
 	private function endGame(?e:Dynamic)
@@ -281,34 +275,41 @@ class Level extends Sprite
 		switch(conditions.type)
 		{
 			case STOCK:
-				for(sprite in sprites)
+				rval = players[0];
+			case TIME:
+				var highScore = -0xffffff;
+				for(player in players)
 				{
-					if(Std.is(sprite, Player))
+					if(highScore < player.getScore())
 					{
-						rval = cast(sprite, Player);
+						highScore = player.getScore();
+						rval = player;
+					}
+					else if(highScore == player.getScore())
+					{
+						rval = null;
 						break;
 					}
 				}
-			case TIME:
-				var highScore = -0xffffff;
-				for(sprite in sprites)
+		}
+		return rval;
+	}
+
+	public function findClosest(p : Player) : Player
+	{
+		var dist : Float = 0xffffff;
+		var rval = null;
+		for(player in players)
+		{
+			if(p != player)
+			{
+				var tempDist = Player.distance(player,p);
+				if(tempDist < dist)
 				{
-					try
-					{
-						var cur = cast(sprite, Player);
-						if(highScore < cur.getScore())
-						{
-							highScore = cur.getScore();
-							rval = cur;
-						}
-						else if(highScore == cur.getScore())
-						{
-							rval = null;
-							break;
-						}
-					}
-					catch(d:Dynamic){continue;}
+					dist = tempDist;
+					rval = player;
 				}
+			}
 		}
 		return rval;
 	}
@@ -321,24 +322,14 @@ class Level extends Sprite
 				haxe.Log.clear();
 				//trace(this);
 			case Keyboard.F2:
-				for(i in 0...sprites.length)
-				{
-					try
-					{cast(sprites[i],Player).reset(level.spawnPoints[i]);}
-					catch(d:Dynamic){continue;}
-				}
+				for(i in 0...players.length)
+					players[i].reset(level.spawnPoints[i]);
 			case Keyboard.F3:
-				for(player in sprites)
-				{
-					try{cast(player,Player).toggleBound();}
-					catch(d:Dynamic){continue;}
-				}
+				for(player in players)
+					player.toggleBound();
 			case Keyboard.F4:
-				for(player in sprites)
-				{
-					try{cast(player,Player).kill();}
-					catch(d:Dynamic){continue;}
-				}
+				for(player in players)
+					player.kill();
 			case Keyboard.F5:
 				showFPS = !showFPS;
 			case Keyboard.ESCAPE:
@@ -349,9 +340,9 @@ class Level extends Sprite
 
 	public function getSpawnPoint(p : Player) : Point
 	{
-		for(i in 0...sprites.length)
+		for(i in 0...players.length)
 		{
-			if(sprites[i] == p)
+			if(players[i] == p)
 				return level.spawnPoints[i];
 		}
 		throw "Player isn't in the level...";
