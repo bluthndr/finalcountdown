@@ -23,6 +23,7 @@ class Root extends Sprite
 		assets.enqueue("assets/Crack.mp3");
 		assets.enqueue("assets/Jump.mp3");
 		assets.enqueue("assets/Hit.mp3");
+		assets.enqueue("assets/step.mp3");
 
 		assets.enqueue("assets/EggWhite.png");
 		assets.enqueue("assets/EggWhite.fnt");
