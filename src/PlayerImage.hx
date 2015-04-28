@@ -97,6 +97,7 @@ class PlayerImage extends Sprite
 			case WALK:
 				//trace("Set walk animation");
 				setAnim(PlayerAnimations.walkAnim[0]);
+				SFX.step("step");
 			case JUMP, WALL_JUMP:
 				//trace("Set jump animation");
 				setAnim(PlayerAnimations.jumpAnim);

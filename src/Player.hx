@@ -764,6 +764,7 @@ class Player extends GameSprite
 	public inline function isBlocking() : Bool
 	{	return blockLength > 60;}
 
+
 	override private function move()
 	{
 		if(dead)
@@ -801,6 +802,7 @@ class Player extends GameSprite
 							vel.x = -speed;
 							if(onPlatform() && !image.is(WALK))
 								image.setAnimation(WALK);
+								//SFX.step("step");
 						}
 					case RIGHT:
 						if(downHeld) noMovement();
@@ -810,9 +812,10 @@ class Player extends GameSprite
 							vel.x = speed;
 							if(onPlatform() && !image.is(WALK))
 								image.setAnimation(WALK);
+								//SFX.step("step");
 						}
 					default:
-						noMovement();
+						noMovement();						
 				}
 				setDir();
 				if(onPlatform())
