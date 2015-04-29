@@ -112,12 +112,13 @@ class Level extends Sprite
 	{
 		output = new GameText(80,80,Std.string(time));
 		output.x = 50;
-		output.y = 50;
+		output.y = 120;
 		output.fontSize = 30;
 		output.alignPivot();
 		output.vAlign = VAlign.CENTER;
 		output.hAlign = HAlign.CENTER;
-		addChild(output);
+		Game.game.addChild(output);
+		output.removeBorder();
 	}
 	
 	private function updateTime(time:Float)
