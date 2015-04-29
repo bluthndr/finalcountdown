@@ -1,7 +1,10 @@
 import starling.display.*;
 import starling.events.*;
+import starling.utils.*;
 import flash.ui.*;
 import flash.geom.*;
+import flash.events.TimerEvent;
+import flash.utils.Timer;
 
 enum GAME_TYPE
 {
@@ -18,6 +21,7 @@ class Level extends Sprite
 	private var level : LevelMap;
 	private var camera : Camera;
 	private var gameTimer : flash.utils.Timer;
+	private var output : GameText;
 
 	//private var showFPS : Bool;
 	//private var frameCount : UInt;
@@ -40,7 +44,7 @@ class Level extends Sprite
 		level = map;
 		bg = new Quad(Startup.stageWidth(), Startup.stageHeight(), level.bgColor);
 		conditions = t == null ? defaultCond : t;
-
+		
 		camera = new Camera(level.minX, level.minY, map.width, map.height);
 
 		addEventListener(Event.ADDED_TO_STAGE, preGame);
@@ -84,10 +88,41 @@ class Level extends Sprite
 		//addEventListener(KeyboardEvent.KEY_UP, debugFunc);
 		if(conditions.type == TIME)
 		{
-			gameTimer = new flash.utils.Timer(conditions.goal, 1);
-			gameTimer.start();
-			gameTimer.addEventListener(flash.events.TimerEvent.TIMER_COMPLETE, endGame);
+			//gameTimer = new flash.utils.Timer(conditions.goal, 1);
+			//gameTimer.addEventListener(flash.events.TimerEvent.TIMER_COMPLETE,endGame);
+			
+			var remainingTime = conditions.goal/1000;
+			initTimer(remainingTime);
+			var dispTimer = new haxe.Timer(1000);
+			dispTimer.run = function()
+			{
+				remainingTime = remainingTime - 1;
+				//trace(remainingTime);
+				updateTime(remainingTime);
+				if (remainingTime == 0)
+				{
+					endGame();
+					dispTimer.stop();
+				}
+			}
 		}
+	}
+	
+	private function initTimer(time:Float)
+	{
+		output = new GameText(80,80,Std.string(time));
+		output.x = 50;
+		output.y = 50;
+		output.fontSize = 30;
+		output.alignPivot();
+		output.vAlign = VAlign.CENTER;
+		output.hAlign = HAlign.CENTER;
+		addChild(output);
+	}
+	
+	private function updateTime(time:Float)
+	{
+		output.text = Std.string(time);
 	}
 
 	private function loadSprites()
