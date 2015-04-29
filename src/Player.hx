@@ -812,7 +812,6 @@ class Player extends GameSprite
 							vel.x = speed;
 							if(onPlatform() && !image.is(WALK))
 								image.setAnimation(WALK);
-								//SFX.step("step");
 						}
 					default:
 						noMovement();						

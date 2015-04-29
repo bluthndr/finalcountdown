@@ -15,7 +15,7 @@ class SFX
 			isStepping = true;
 			var sound = Root.assets.getSound(s);
 			var stepChannel = sound.play();
-			stepChannel.soundTransform = new SoundTransform(soundVol-0.03);
+			stepChannel.soundTransform = new SoundTransform(soundVol-(Math.random()/20));
 			stepChannel.addEventListener(flash.events.Event.SOUND_COMPLETE,
 			function(e:flash.events.Event)
 			{

@@ -242,6 +242,7 @@ class PlayerImage extends Sprite
 			case WALK:
 				if(frameCount % 6 == 0)
 					setAnim(PlayerAnimations.walkAnim[++curFrame % PlayerAnimations.walkAnim.length]);
+				SFX.step("step");
 			case WALL_JUMP:
 				if(++curFrame > 30)
 					setAnimation(FALL);
